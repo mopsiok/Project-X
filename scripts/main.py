@@ -1,13 +1,10 @@
-import network, time, machine
-try:
-    import usocket as socket
-except:
-    import socket
-import ussl as ssl
-
+import network, time, machine, webrepl
 from config import *
 from templates import *
 from umqttsimple import MQTTClient
+
+# running webrepl in case boot.py crashed
+webrepl.start()
 
 # -------------------------------------------------------------------
 # configuration
