@@ -6,7 +6,6 @@ esp.osdebug(None) #turn off vendor O/S debugging messages
 webrepl.start()
 gc.collect()
 
-from templates import *
 from config import *
 
 # -------------------------------------------------------------------
