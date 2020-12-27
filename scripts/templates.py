@@ -5,7 +5,6 @@ HTTP/1.0 200 OK
   <title>Project X config page</title>
  </head>
  <body>
-  <p>%s</p>
   <form method="post">
    Enter SSID and password:</br>
    SSID:&nbsp;<input name="ssid" type="text"/></br>
@@ -28,7 +27,6 @@ HTTP/1.0 200 OK
   <title>Project X config page</title>
  </head>
  <body>
-  <p>%s</p>
   <p>The board is going to reboot, and try to connect to specified network.</p>
  </body>
 </html>
