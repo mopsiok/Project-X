@@ -4,7 +4,8 @@
 CONFIG = {} 
 SETTINGS_FILE = 'settings.conf'
 SETTINGS_DELIM = ' := '
-REQUIRED_KEYS = ('WIFI_SSID','WIFI_PASS','MQTT_WRITE_KEY','MQTT_PUBLISH_PERIOD')
+REQUIRED_KEYS = ('WIFI_SSID','WIFI_PASS',
+                'MQTT_SERVER','MQTT_CHANNEL_ID','MQTT_WRITE_KEY','MQTT_PUBLISH_PERIOD')
 
 
 # -------------------------------------------------------------------
@@ -54,7 +55,7 @@ def write_config():
         f.write(tmp)
         f.close()
         return 0
-        
+
     except:
         print('Config write error')
         return 1

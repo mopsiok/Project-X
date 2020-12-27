@@ -31,3 +31,15 @@ HTTP/1.0 200 OK
  </body>
 </html>
 """
+
+
+# a template of HTTP request to ThingSpeak to post temperature and humidity
+THINGSPEAK_POST_TEMPLATE = """
+POST /update HTTP/1.1
+Host: api.thingspeak.com
+Connection: close
+X-THINGSPEAKAPIKEY: %s
+Content-Type: application/x-www-form-urlencoded
+Content-Length: %d
+%s
+"""

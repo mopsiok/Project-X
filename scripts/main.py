@@ -1,13 +1,19 @@
 import network, time, machine
+try:
+    import usocket as socket
+except:
+    import socket
+import ussl as ssl
+
 from config import *
+from templates import *
+from umqttsimple import MQTTClient
 
 # -------------------------------------------------------------------
 # configuration
 # -------------------------------------------------------------------
 
 RELAY_PIN = 2
-SERVER = "mqtt.thingspeak.com"
-CHANNEL_ID = "1269906"
 
 
 
@@ -37,6 +43,30 @@ def wifi_connect(ssid, password, timeout=10000):
     return 0
 
 
+def send_data(temperature, humidity):
+    server = CONFIG.get('MQTT_SERVER')
+    channel_id = CONFIG.get('MQTT_CHANNEL_ID')
+    key = CONFIG.get('MQTT_WRITE_KEY')
+    
+    if (not server) or (not channel_id) or (not key):
+        print('Missing MQTT config, sending data skipped')
+        return 1
+
+    try:
+        topic = "channels/" + channel_id + "/publish/" + key
+        payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
+        client = MQTTClient("umqtt_client", server)
+        client.connect()
+        client.publish(topic, payload)
+        client.disconnect()
+
+        print('Message published')
+        return 0
+    except:
+        print('Connection error')
+        return 2
+        
+
 
 # -------------------------------------------------------------------
 # main program
@@ -55,32 +85,14 @@ password = CONFIG.get('WIFI_PASS')
 print('\nConnecting WiFi (%s,%s)...' % (ssid, password))
 wifi_connect(ssid, password)
 
-
 #TODO to be deleted
 for i in range(10):
-	relay.off()
-	time.sleep_ms(250)
-	relay.on()
-	time.sleep_ms(250)
-
-
-# relay = machine.Pin(RELAY_GPIO, machine.Pin.OUT)
-# client = MQTTClient("umqtt_client", SERVER)
-# topic = "channels/" + CHANNEL_ID + "/publish/" + WRITE_API_KEY
-
-# i = 0
-# while True:
-#     temp = 23.4 + sin(0.1*i)
-#     hum = 75 + 5*sin(0.1*(i+5))
-#     payload = "field1=%.1f&field2=%.1f" % (temp, hum)
-
-#     relay.off()
-#     client.connect()
-#     client.publish(topic, payload)
-#     client.disconnect()
-#     relay.on()
-
-#     time.sleep(PUBLISH_PERIOD)
-#     i += 1
+    relay.off()
+    time.sleep_ms(250)
+    relay.on()
+    time.sleep_ms(250)
+    
+    send_data(22+i*0.5, 70+i)
+    time.sleep(30)
 
 print('### Quitting main.py ###')
