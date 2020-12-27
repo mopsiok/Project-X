@@ -3,7 +3,8 @@
 # global config dictionary
 CONFIG = {} 
 SETTINGS_FILE = 'settings.conf'
-REQUIRED_KEYS = ('WIFI_SSID','WIFI_PASS','MQTT_READ_KEY')
+SETTINGS_DELIM = ' := '
+REQUIRED_KEYS = ('WIFI_SSID','WIFI_PASS','MQTT_WRITE_KEY','MQTT_PUBLISH_PERIOD')
 
 
 # -------------------------------------------------------------------
@@ -20,7 +21,7 @@ def read_config():
         f.close()
         for line in tmp.split('\n'):
             try:
-                key,value = line.split(' := ')
+                key,value = line.split(SETTINGS_DELIM)
                 config_tmp[key] = value
             except:
                 pass
@@ -41,3 +42,19 @@ def read_config():
     except:
         print('Config read error')
         return 2
+
+
+def write_config():
+    try:
+        tmp = ""
+        for key in CONFIG:
+            tmp += key + SETTINGS_DELIM + CONFIG.get(key) + '\n'
+
+        f = open(SETTINGS_FILE, 'w')
+        f.write(tmp)
+        f.close()
+        return 0
+        
+    except:
+        print('Config write error')
+        return 1

@@ -8,8 +8,6 @@ from config import *
 RELAY_PIN = 2
 SERVER = "mqtt.thingspeak.com"
 CHANNEL_ID = "1269906"
-WRITE_API_KEY = "GAWE54HV7OIWIAMI"
-PUBLISH_PERIOD = 20
 
 
 
