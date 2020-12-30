@@ -2,22 +2,30 @@
 
 import esp, gc, webrepl, network
 import usocket as socket
+
+import config
+
 esp.osdebug(None) #turn off vendor O/S debugging messages
 webrepl.start()
 gc.collect()
 
-from config import *
+
 
 # -------------------------------------------------------------------
-# configuration consts
+# configuration
 # -------------------------------------------------------------------
-CONFIG_WIFI_SSID = 'PROJECT_X'
-CONFIG_WIFI_PASSWORD = 'P4prykowe'
-CONFIG_SERVER_PORT = 80
-CONFIG_HTML_INDEX = 'config_index.html'
+
+AP_SSID = 'PROJECT_X'
+AP_PASSWORD = 'P4prykowe'
+
+SERVER_INDEX = 'boot_index.html'
+SERVER_PORT = 80
+
 FLASH_BUTTON_PIN = 0
 CONFIG_DELAY = 3
 REBOOT_DELAY = 3
+
+CONFIG = {}
 
 
 
@@ -112,22 +120,21 @@ def server_start():
 
 print('\n\n### Entering boot.py ###')
 
-
+#reading boot config
+err = config.boot_read()
+CONFIG = config.BOOT_CONFIG 
 config_mode = False
-
-print('\nReading config file...')
-read_err = read_config()
-if read_err != 0:
+if err != 0:
     print('Forcing config mode.')
     config_mode = True
 
 
-from machine import Pin
 
+from machine import Pin
 led = Pin(2, Pin.OUT)
 
 
-access_point_start()
-server_start()
+#access_point_start()
+#server_start()
 
 print('\n### Quitting boot.py ###')

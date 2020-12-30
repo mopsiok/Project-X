@@ -16,9 +16,9 @@
 
 2. instalacja micropythona
 	- wejść do katalogu esptool
-	- esptool.py --port COM17 erase_flash
+	- esptool.py --port COM11 erase_flash
 	- założyć zworkę i wcisnąć reset
-	- esptool.py --port COM17 --baud 115200 write_flash --flash_size=detect 0 binarka_stara.bin
+	- esptool.py --port COM11 --baud 115200 write_flash --flash_size=detect 0 binarka_stara.bin
 	- wcisnąć reset
 	- po wgraniu softu uruchomić terminal, włączyć port na prędkości 115200, wyciągnąć zworkę i wcisnąć reset 
 	- powinien uruchomić się micropython
