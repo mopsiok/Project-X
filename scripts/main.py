@@ -1,6 +1,6 @@
 # This file is executed after boot.py
 
-import network, time, machine, webrepl
+import network, machine, webrepl, sys, ubinascii, utime
 
 import config
 from umqttsimple import MQTTClient
@@ -22,6 +22,21 @@ CONFIG_BOOT = {}
 
 
 # -------------------------------------------------------------------
+# aux functions
+# -------------------------------------------------------------------
+
+# get a string based on module's unique ID
+def aux_get_id():
+    id_str = ubinascii.hexlify(machine.unique_id())
+    return id_str.decode()
+
+# generate a pseudo-random string based on module's unique ID and current time
+def aux_generate_id():
+    return "%s_%04i" % (aux_get_id(), (utime.ticks_us() % 10000))
+
+
+
+# -------------------------------------------------------------------
 # wifi-related functions
 # -------------------------------------------------------------------
 
@@ -39,7 +54,7 @@ def wifi_connect(ssid, password, timeout=10000):
     sta.active(True)
     sta.connect(ssid, password)
     while not sta.isconnected():
-        time.sleep_ms(10)
+        utime.sleep_ms(10)
         timeout -= 10
         if timeout <= 0:
             print('Connection timeout.')
@@ -48,32 +63,27 @@ def wifi_connect(ssid, password, timeout=10000):
     return 0
 
 # TODO description
-def send_data(temperature, humidity):
-    print("\n\n\n\n")
-    print(CONFIG)
+def mqtt_publish(temperature, humidity):
     server = CONFIG.get('MQTT_SERVER')
     channel_id = CONFIG.get('MQTT_CHANNEL_ID')
-    key = CONFIG.get('MQTT_WRITE_KEY')
-    print(server, channel_id, key)
-    
+    key = CONFIG.get('MQTT_WRITE_KEY')    
     if (not server) or (not channel_id) or (not key):
         print('Missing MQTT config, sending data skipped')
         return 1
 
     try:
+        client_id = aux_generate_id()
         topic = "channels/" + channel_id + "/publish/" + key
-        print(topic)
         payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
-        print(payload)
-        client = MQTTClient("umqtt_client", server)
+        client = MQTTClient(client_id, server)
         client.connect()
         client.publish(topic, payload)
         client.disconnect()
 
-        print('Message published (%.2f*C, %.2f%)' % (temperature, humidity))
+        print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
         return 0
     except Exception as e:
-        print(e)
+        print(e) # sys.print_exception(e)
         return 2
         
 
@@ -99,13 +109,13 @@ password = CONFIG_BOOT.get('WIFI_PASS')
 wifi_connect(ssid, password)
 
 #TODO to be deleted
-for i in range(1):
+for i in range(5):
     relay.off()
-    time.sleep_ms(250)
+    utime.sleep_ms(250)
     relay.on()
-    time.sleep_ms(250)
+    utime.sleep_ms(250)
     
-    send_data(22+i*0.5, 70+i)
-    time.sleep(30)
+    mqtt_publish(22+i*0.5, 70+i)
+    utime.sleep(30)
 
 print('### Quitting main.py ###')
