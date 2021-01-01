@@ -1,7 +1,8 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 
-import esp, gc, webrepl, network
-import usocket as socket
+import esp, gc, webrepl, network, machine, utime
+from machine import Pin
+import usocket as socket #TODO TBD
 
 import config
 
@@ -12,7 +13,7 @@ gc.collect()
 
 
 # -------------------------------------------------------------------
-# configuration
+# configuration & consts
 # -------------------------------------------------------------------
 
 AP_SSID = 'PROJECT_X'
@@ -21,17 +22,27 @@ AP_PASSWORD = 'P4prykowe'
 SERVER_INDEX = 'boot_index.html'
 SERVER_PORT = 80
 
-FLASH_BUTTON_PIN = 0
-CONFIG_DELAY = 3
-REBOOT_DELAY = 3
-
 CONFIG = {}
+
+# magic numbers
+BOOT_BUTTON_PIN = 0 # boot button gpio (flash pin)
+BOOT_ENTER_DELAY = 3000 # waiting period before checking button status, in ms
+
+LED_PIN = 2
 
 
 
 # -------------------------------------------------------------------
 # aux functions
 # -------------------------------------------------------------------
+
+def led_on():
+    global led
+    led.off()
+
+def led_off():
+    global led
+    led.on()
 
 # start wifi access point
 def access_point_start():
@@ -120,6 +131,11 @@ def server_start():
 
 print('\n\n### Entering boot.py ###')
 
+led = Pin(LED_PIN, Pin.OUT)
+button = Pin(BOOT_BUTTON_PIN, Pin.IN, Pin.PULL_UP)
+
+led_off()
+
 #reading boot config
 err = config.boot_read()
 CONFIG = config.BOOT_CONFIG 
@@ -128,13 +144,29 @@ if err != 0:
     print('Forcing config mode.')
     config_mode = True
 
+# checking FLASH button for specifying configuration mode
+if not config_mode:
+    for i in range(30):
+        utime.sleep_ms(int(BOOT_ENTER_DELAY/30))
+        if (i % 2 == 1):
+            led_on()
+        else:
+            led_off()
 
+    if (button.value() == 0):
+        config_mode = True
 
-from machine import Pin
-led = Pin(2, Pin.OUT)
+# entering config mode
+if config_mode:
+    print('\n[CONFIG MODE]')
+    led_on()
 
+    utime.sleep(1)
+    #access_point_start()
+    #server_start()
+else:
+    print('\n[NORMAL MODE]')
 
-#access_point_start()
-#server_start()
+led_off()
 
 print('\n### Quitting boot.py ###')
