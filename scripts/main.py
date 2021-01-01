@@ -28,9 +28,7 @@ CONFIG_BOOT = {}
 # TODO description
 def wifi_connect(ssid, password, timeout=10000):
     print('\nConnecting WiFi (%s,%s)...' % (ssid, password))
-
     sta = network.WLAN(network.STA_IF)
-
     if (not ssid) or (not password):
         sta.active(False)
         return 1
@@ -51,9 +49,12 @@ def wifi_connect(ssid, password, timeout=10000):
 
 # TODO description
 def send_data(temperature, humidity):
+    print("\n\n\n\n")
+    print(CONFIG)
     server = CONFIG.get('MQTT_SERVER')
     channel_id = CONFIG.get('MQTT_CHANNEL_ID')
     key = CONFIG.get('MQTT_WRITE_KEY')
+    print(server, channel_id, key)
     
     if (not server) or (not channel_id) or (not key):
         print('Missing MQTT config, sending data skipped')
@@ -61,16 +62,18 @@ def send_data(temperature, humidity):
 
     try:
         topic = "channels/" + channel_id + "/publish/" + key
+        print(topic)
         payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
+        print(payload)
         client = MQTTClient("umqtt_client", server)
         client.connect()
         client.publish(topic, payload)
         client.disconnect()
 
-        print('Message published')
+        print('Message published (%.2f*C, %.2f%)' % (temperature, humidity))
         return 0
-    except:
-        print('Connection error')
+    except Exception as e:
+        print(e)
         return 2
         
 
@@ -96,13 +99,13 @@ password = CONFIG_BOOT.get('WIFI_PASS')
 wifi_connect(ssid, password)
 
 #TODO to be deleted
-for i in range(10):
+for i in range(1):
     relay.off()
     time.sleep_ms(250)
     relay.on()
     time.sleep_ms(250)
     
-    #send_data(22+i*0.5, 70+i)
-    #time.sleep(30)
+    send_data(22+i*0.5, 70+i)
+    time.sleep(30)
 
 print('### Quitting main.py ###')
