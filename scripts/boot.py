@@ -1,10 +1,9 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 
-import esp, gc, webrepl, network, machine, utime
+import esp, gc, sys, webrepl, network, machine, utime
 from machine import Pin
-import usocket as socket #TODO TBD
 
-import config
+import config, webserver
 
 esp.osdebug(None) #turn off vendor O/S debugging messages
 webrepl.start()
@@ -13,22 +12,34 @@ gc.collect()
 
 
 # -------------------------------------------------------------------
-# configuration & consts
+# configuration
 # -------------------------------------------------------------------
 
 AP_SSID = 'PROJECT_X'
 AP_PASSWORD = 'P4prykowe'
 
 SERVER_INDEX = 'boot_index.html'
-SERVER_PORT = 80
 
 CONFIG = {}
 
-# magic numbers
-BOOT_BUTTON_PIN = 0 # boot button gpio (flash pin)
-BOOT_ENTER_DELAY = 3000 # waiting period before checking button status, in ms
 
-LED_PIN = 2
+
+# -------------------------------------------------------------------
+# magic numbers
+# -------------------------------------------------------------------
+
+BOOT_BUTTON_PIN = 0 # boot button gpio (flash pin)
+BOOT_ENTER_DELAY = 3000 # waiting period before checking button status (in ms)
+BOOT_CLOSE_DELAY = 2000 # waiting period for finishing connection after AP stop request (in ms)
+
+LED_PIN = 2 # status led gpio pin
+
+# possible webserver responses
+SERVER_PROCESS_EMPTY = 0
+SERVER_PROCESS_SAVE = 1
+SERVER_PROCESS_INCOMPLETE = 2
+SERVER_PROCESS_ERROR = 254
+SERVER_PROCESS_REBOOT = 255
 
 
 
@@ -36,92 +47,91 @@ LED_PIN = 2
 # aux functions
 # -------------------------------------------------------------------
 
+# light on the status led
 def led_on():
     global led
     led.off()
 
+
+# light off the status led
 def led_off():
     global led
     led.on()
 
-# start wifi access point
-def access_point_start():
+
+# reboot the board
+def esp_reboot():
+    print('\nRebooting ...')
+    machine.reset()
+
+
+# start wifi access point and returns its network info (ip, mask, gateway, dns)
+def access_point_start(ssid, password):
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
-    ap.config(essid=CONFIG_WIFI_SSID, password=CONFIG_WIFI_PASSWORD, authmode=network.AUTH_WPA2_PSK)
-    print('Access Point started (%s,%s)' % (CONFIG_WIFI_SSID,CONFIG_WIFI_PASSWORD))
+    ap.config(essid=ssid, password=password, authmode=network.AUTH_WPA2_PSK)
+    utime.sleep_ms(500)
+    info = ap.ifconfig()
+    print('Access Point started (%s,%s)' % (ssid,password))
+    print('Network info:', info)
+    return info
 
 
-# send a response (webpage) to the user
-def server_respond():
+# stop wifi access point
+def access_point_stop():
+    ap = network.WLAN(network.AP_IF)
+    ap.active(False)
+    print('Access Point stopped.')
+
+
+# response webpage to be returned to the user
+def server_respond(process_result=SERVER_PROCESS_EMPTY):
+    info = ''
+    if process_result == SERVER_PROCESS_SAVE:
+        info = 'Configuration saved.'
+    elif process_result == SERVER_PROCESS_INCOMPLETE:
+        info = 'Incomplete data.'
+    elif process_result == SERVER_PROCESS_ERROR:
+        info = 'Unexpected error.'
+    elif process_result == SERVER_PROCESS_REBOOT:
+        info = 'Rebooting...'
+
     try:
-        f = open(CONFIG_HTML_INDEX)
+        f = open(SERVER_INDEX)
         html = f.read()
-        html = html % (CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'))
+        html = html % (CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), info)
     finally:
         f.close()
-
+    
     return html
 
 
-# execute data received from user
+# execute data received from user (if 255 returned, the sever will stop)
 def server_process_data(data):
-    #TODO funkcja wykonujaca data + zwracajaca czy wyjsc z serwera (po kliknieciu guzika zamknij)
-    pass
-
-
-# run a local webserver for user configuration
-def server_start():
     try:
-        s = socket.socket()
-        ai = socket.getaddrinfo('0.0.0.0',CONFIG_SERVER_PORT)
-        addr = ai[0][-1]
-        s.bind(addr)
-        s.listen(1)
-        print('Configuration server started on 192.168.4.1:%d' % CONFIG_SERVER_PORT)
+        ssid = data.get('WIFI_SSID')
+        password = data.get('WIFI_PASS')
+        reboot = data.get('REBOOT')
 
-        for i in range(5):
-            try:
-                conn, addr = s.accept()
-                print('Connection from %s' % str(addr))
-                request = conn.recv(1024)
-                request = request.decode() #bytes to string
+        print('GET data: ssid=%s password=%s reboot=%s' % (ssid, password, reboot))
 
-                data = {}
+        if (reboot == None) and (ssid == None) and (password == None):
+            return SERVER_PROCESS_EMPTY
 
-                try:
-                    pos1 = request.find('GET /?')
-                    if pos1 >= 0:
-                        #request has GET data sent from the user - parse
-                        pos2 = request.find(' HTTP')
-                        request = request[pos1+6 : pos2]
-                    
-                        for field in request.split('&'):
-                            k, v = field.split('=')
-                            data[k] = v
-                except Exception as e:
-                    print(e)
-                    
-                print('GET data:', data)
-                server_process_data(data)
+        if (reboot != None) and (reboot != ''):
+            return SERVER_PROCESS_REBOOT
+        else:
+            if (ssid != None) and (ssid != '') and (password != None) and (password != ''):
+                CONFIG['WIFI_SSID'] = ssid
+                CONFIG['WIFI_PASS'] = password
+                config.boot_write()
+                return SERVER_PROCESS_SAVE
+            else:
+                return SERVER_PROCESS_INCOMPLETE
+    except Exception as e:
+        sys.print_exception(e)
 
-                #TODO zmienic for na while i wychodzic zwrotka z server_process_data
-                
-                conn.send(server_respond())
-                conn.close()
-            except Exception as e:
-                print(e)
-    except Exception as e: 
-        print(e)
-
-
-# # reboot the board after some delay
-# def reboot():
-#     import time
-#     import machine
-#     print('rebooting ...')
-#     time.sleep(REBOOT_DELAY)
-#     machine.reset()
+    return SERVER_PROCESS_ERROR
 
 
 
@@ -153,17 +163,25 @@ if not config_mode:
         else:
             led_off()
 
-    if (button.value() == 0):
-        config_mode = True
+        if (button.value() == 0):
+            config_mode = True
+            break
 
 # entering config mode
 if config_mode:
     print('\n[CONFIG MODE]')
     led_on()
 
-    utime.sleep(1)
-    #access_point_start()
-    #server_start()
+    network_info = access_point_start(AP_SSID, AP_PASSWORD)
+    ip = network_info[0]
+
+    webserver.start(ip, process_callback=server_process_data, respond_callback=server_respond)
+
+    print('Stopping Access Point...')
+    utime.sleep_ms(BOOT_CLOSE_DELAY)
+    access_point_stop()
+    utime.sleep_ms(100)
+    esp_reboot()
 else:
     print('\n[NORMAL MODE]')
 
