@@ -159,6 +159,12 @@ def server_load_webpage():
     # print(WEBPAGE_INSERT_INDEX)
 
 
+# execute data received from user (if 255 returned, the sever will stop)
+def server_process_data(data):
+    print("\nReceived data:")
+    print(data)
+
+
 # response webpage to be returned to the user
 def server_respond(conn, process_result=SERVER_PROCESS_EMPTY):
     info = ''
@@ -177,8 +183,6 @@ def server_respond(conn, process_result=SERVER_PROCESS_EMPTY):
         CONFIG.get('PWM3_DAY'), CONFIG.get('PWM3_NIGHT'), CONFIG.get('PWM4_DAY'), CONFIG.get('PWM4_NIGHT'),
         CONFIG.get('MQTT_SERVER'), CONFIG.get('MQTT_CHANNEL_ID'), CONFIG.get('MQTT_WRITE_KEY'), CONFIG.get('MQTT_PUBLISH_PERIOD'),
         info)
-
-    #conn.write(WEBPAGE_CODE % data)
 
     data_index = 0
     for index in range(len(WEBPAGE_SPLITTED)):
@@ -214,9 +218,13 @@ ip = network_info[0]
 
 #starting webserver
 server_load_webpage()
-webserver.start(ip, respond_callback=server_respond)
+webserver.start(ip, process_callback=server_process_data, respond_callback=server_respond)
+
 
 #TODO change webpage display in boot.py (NOT COMPATIBLE with current webserver.py)
+
+#TODO wywalic load_webpage i respond do modulu, w funkcji uruchamiania podawac jakas analogie dla data zeby z zewnatrz nie trzeba bylo 
+# !! albo zrobic funkcje pomocnicza ktora uwzglednia tylko load_webpage i obsluge globalnych tablic, i jest wykonywana z poziomu respond na zasadzie generate_webpage(data)
 
 #TODO to be deleted
 for i in range(2):

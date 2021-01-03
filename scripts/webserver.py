@@ -24,13 +24,11 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
         while running:
             try:
                 conn, addr = s.accept()
+                request = ''
+                while not '\r\n\r\n' in request: #double CRLF = end of HTTP request
+                    request += conn.recv(1024).decode()
+
                 print('Connection from %s' % str(addr))
-                request = conn.recv(1024)
-                request = request.decode() #bytes to string
-                if ('\r\n\r\n' in request):
-                    print('===FULL===\n')
-                else:
-                    print('===NOT FULL===\n')
 
                 #parsing user data
                 data = {}
@@ -55,8 +53,6 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
                 #sending response
                 if respond_callback != None:
                     respond_callback(conn, result)
-                    #respond = respond_callback(result)
-                    #conn.send(respond)
 
                 conn.close()
 
