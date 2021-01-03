@@ -1,4 +1,4 @@
-import esp, sys, network, machine, utime
+import network, utime
 import usocket as socket
 
 # run a local webserver
@@ -9,6 +9,7 @@ import usocket as socket
 #   data = dictionary containing data sent by the user
 #   if it returns 255, server is stopped
 # respond_callback(process_result) - function to generate server response
+#TODO
 #   process_result = value returned by process callback, might be used by user for generating different responses
 def start(host, port=80, maxclients=2, process_callback=None, respond_callback=None):
     try:
@@ -26,6 +27,10 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
                 print('Connection from %s' % str(addr))
                 request = conn.recv(1024)
                 request = request.decode() #bytes to string
+                if ('\r\n\r\n' in request):
+                    print('===FULL===\n')
+                else:
+                    print('===NOT FULL===\n')
 
                 #parsing user data
                 data = {}
@@ -40,7 +45,7 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
                             k, v = field.split('=')
                             data[k] = v
                 except Exception as e:
-                    sys.print_exception(e)
+                    print(e)
                     
                 #processing data
                 result = 0
@@ -49,8 +54,9 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
 
                 #sending response
                 if respond_callback != None:
-                    respond = respond_callback(result)
-                    conn.send(respond)
+                    respond_callback(conn, result)
+                    #respond = respond_callback(result)
+                    #conn.send(respond)
 
                 conn.close()
 
@@ -58,11 +64,11 @@ def start(host, port=80, maxclients=2, process_callback=None, respond_callback=N
                 if result == 255:
                     running = False
             except Exception as e:
-                sys.print_exception(e)
+                print(e)
         
         utime.sleep_ms(500)
         s.close()
         print('Webserver stopped.')
 
     except Exception as e: 
-        sys.print_exception(e)
+        print(e)

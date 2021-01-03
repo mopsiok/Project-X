@@ -85,6 +85,7 @@ def access_point_stop():
 
 
 # response webpage to be returned to the user
+#TODO add conn arg
 def server_respond(process_result=SERVER_PROCESS_EMPTY):
     info = ''
     if process_result == SERVER_PROCESS_SAVE:
