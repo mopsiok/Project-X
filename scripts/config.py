@@ -79,7 +79,7 @@ def write(filename, config):
 def boot_read():
     global BOOT_CONFIG
     
-    print('\nReading boot config file...')
+    print('Reading boot config file...')
     err, config = read(BOOT_FILE, BOOT_REQUIRED_KEYS)
     for key in config:
         BOOT_CONFIG[key] = config.get(key)
@@ -87,14 +87,14 @@ def boot_read():
 
 # writes global BOOT_CONFIG to boot config file and returns error code
 def boot_write():
-    print('\nWriting boot config file...')
+    print('Writing boot config file...')
     err = write(BOOT_FILE, BOOT_CONFIG)
     return err
 
 # reads main config file to global MAIN_CONFIG and returns error code
 def main_read():
     global MAIN_CONFIG
-    print('\nReading main config file...')
+    print('Reading main config file...')
     err, config = read(MAIN_FILE, MAIN_REQUIRED_KEYS)
     for key in config:
         MAIN_CONFIG[key] = config.get(key)
@@ -102,6 +102,6 @@ def main_read():
 
 # writes global MAIN_CONFIG to main config file and returns error code
 def main_write():
-    print('\nWriting main config file...')
+    print('Writing main config file...')
     err = write(MAIN_FILE, MAIN_CONFIG)
     return err

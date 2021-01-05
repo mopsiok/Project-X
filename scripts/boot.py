@@ -1,6 +1,6 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 
-import esp, gc, sys, webrepl, network, machine, utime
+import esp, gc, webrepl, network, machine, utime
 from machine import Pin
 
 import config, webserver
@@ -61,9 +61,14 @@ def led_off():
 
 # reboot the board
 def esp_reboot():
-    print('\nRebooting ...')
+    print('Rebooting ...')
     machine.reset()
 
+
+
+# -------------------------------------------------------------------
+# wifi functions
+# -------------------------------------------------------------------
 
 # start wifi access point and returns its network info (ip, mask, gateway, dns)
 def access_point_start(ssid, password):
@@ -84,9 +89,41 @@ def access_point_stop():
     print('Access Point stopped.')
 
 
+
+# -------------------------------------------------------------------
+# webserver functions
+# -------------------------------------------------------------------
+
+# execute data received from user (if 255 returned, the server will stop)
+def server_process_data(data):
+    global CONFIG
+    try:
+        print("Received data:")
+        print(data)
+
+        if len(data) == 0:
+            return SERVER_PROCESS_EMPTY
+
+        if data.get('REBOOT'):
+            return SERVER_PROCESS_REBOOT
+        else:
+            ssid = data.get('WIFI_SSID')
+            password = data.get('WIFI_PASS')
+            if ssid and password:
+                CONFIG['WIFI_SSID'] = ssid
+                CONFIG['WIFI_PASS'] = password
+                config.boot_write()
+                return SERVER_PROCESS_SAVE
+            else:
+                return SERVER_PROCESS_INCOMPLETE
+    except:
+        print('Error while processing user data.')
+        return SERVER_PROCESS_ERROR
+
+
 # response webpage to be returned to the user
-#TODO add conn arg
-def server_respond(process_result=SERVER_PROCESS_EMPTY):
+# process_result - return code of process callback executing user data
+def server_respond(process_result):
     info = ''
     if process_result == SERVER_PROCESS_SAVE:
         info = 'Configuration saved.'
@@ -97,42 +134,9 @@ def server_respond(process_result=SERVER_PROCESS_EMPTY):
     elif process_result == SERVER_PROCESS_REBOOT:
         info = 'Rebooting...'
 
-    try:
-        f = open(SERVER_INDEX)
-        html = f.read()
-        html = html % (CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), info)
-    finally:
-        f.close()
-    
-    return html
-
-
-# execute data received from user (if 255 returned, the sever will stop)
-def server_process_data(data):
-    try:
-        ssid = data.get('WIFI_SSID')
-        password = data.get('WIFI_PASS')
-        reboot = data.get('REBOOT')
-
-        print('GET data: ssid=%s password=%s reboot=%s' % (ssid, password, reboot))
-
-        if (reboot == None) and (ssid == None) and (password == None):
-            return SERVER_PROCESS_EMPTY
-
-        if (reboot != None) and (reboot != ''):
-            return SERVER_PROCESS_REBOOT
-        else:
-            if (ssid != None) and (ssid != '') and (password != None) and (password != ''):
-                CONFIG['WIFI_SSID'] = ssid
-                CONFIG['WIFI_PASS'] = password
-                config.boot_write()
-                return SERVER_PROCESS_SAVE
-            else:
-                return SERVER_PROCESS_INCOMPLETE
-    except Exception as e:
-        sys.print_exception(e)
-
-    return SERVER_PROCESS_ERROR
+    #TODO initialize once and change info only ?
+    data = (CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), info)
+    webserver.send_webpage(data)
 
 
 
@@ -168,24 +172,27 @@ if not config_mode:
             config_mode = True
             break
 
-# entering config mode
 if config_mode:
-    print('\n[CONFIG MODE]')
+    # entering config mode
+    print('[CONFIG MODE]')
     led_on()
 
+    #connecting do WiFi
     network_info = access_point_start(AP_SSID, AP_PASSWORD)
     ip = network_info[0]
 
-    webserver.start(ip, process_callback=server_process_data, respond_callback=server_respond)
+    #starting config webserver
+    webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
 
+    #server is stopped on user demand or due to error - disabling AP and rebooting
     print('Stopping Access Point...')
     utime.sleep_ms(BOOT_CLOSE_DELAY)
     access_point_stop()
     utime.sleep_ms(100)
     esp_reboot()
 else:
-    print('\n[NORMAL MODE]')
+    print('[NORMAL MODE]')
 
 led_off()
 
-print('\n### Quitting boot.py ###')
+print('### Quitting boot.py ###')

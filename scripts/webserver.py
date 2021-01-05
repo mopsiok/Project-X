@@ -125,7 +125,7 @@ def start(host, port, index_filename, process_callback=None, respond_callback=No
                 while not '\r\n\r\n' in request: #double CRLF = end of HTTP request
                     request += TCP_SOCK.recv(1024).decode()
 
-                print('Connection from %s' % str(addr))
+                print('\nConnection from %s' % str(addr))
 
                 #parsing user data
                 data = {}

@@ -74,7 +74,7 @@ def aux_generate_id():
 # timeout - int, maximum timeout in ms
 # returns error code (0 = connected; 1 = missing credentials; 2 = timeout) and configuration info
 def wifi_connect(ssid, password, timeout=10000):
-    print('\nConnecting WiFi (%s,%s)...' % (ssid, password))
+    print('Connecting to WiFi (%s,%s)...' % (ssid, password))
     sta = network.WLAN(network.STA_IF)
     if (not ssid) or (not password):
         sta.active(False)
@@ -140,7 +140,6 @@ def server_process_data(data):
     try:
         print("Received data:")
         print(data)
-        print('\n')
 
         if len(data) == 0:
             return SERVER_PROCESS_EMPTY
@@ -187,6 +186,7 @@ def server_process_data(data):
 
 
 # response webpage to be returned to the user
+# process_result - return code of process callback executing user data
 def server_respond(process_result):
     info = ''
     if process_result == SERVER_PROCESS_SAVE:
@@ -204,7 +204,6 @@ def server_respond(process_result):
         CONFIG.get('PWM3_DAY'), CONFIG.get('PWM3_NIGHT'), CONFIG.get('PWM4_DAY'), CONFIG.get('PWM4_NIGHT'),
         CONFIG.get('MQTT_SERVER'), CONFIG.get('MQTT_CHANNEL_ID'), CONFIG.get('MQTT_WRITE_KEY'), CONFIG.get('MQTT_PUBLISH_PERIOD'),
         info)
-
     webserver.send_webpage(data)
 
 
@@ -231,14 +230,8 @@ password = CONFIG_BOOT.get('WIFI_PASS')
 wifi_err, network_info = wifi_connect(ssid, password)
 ip = network_info[0]
 
-#starting webserver
+#starting config webserver
 webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
-
-#TODO wywalic load_webpage i respond do modulu, w funkcji uruchamiania podawac jakas analogie dla data zeby z zewnatrz nie trzeba bylo 
-# !! albo zrobic funkcje pomocnicza ktora uwzglednia tylko load_webpage i obsluge globalnych tablic, i jest wykonywana z poziomu respond na zasadzie generate_webpage(data)
-# wywalic WEBPAGE_CODE
-
-#TODO change webpage display in boot.py (NOT COMPATIBLE with current webserver.py)
 
 #TODO to be deleted
 for i in range(2):
