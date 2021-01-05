@@ -10,7 +10,7 @@ import usocket as socket
 BUFFER_MAX_SIZE = 500
 
 
-# TCP socket opened by the user to send HTTP respond to
+# TCP socket opened by the user to send HTTP response to
 TCP_SOCK = None
 
 # webpage code splitted to chunks, including empty fields for user data when '%s' occured
@@ -83,9 +83,10 @@ def send_webpage(escape_data):
                 data_index += 1
             else:
                 TCP_SOCK.write(WEBPAGE_SPLITTED[index])
+        gc.collect()
         return 0
     except:
-        print('Error while sending HTTP respond.')
+        print('Error while sending HTTP response.')
     gc.collect()
     return 2
 
@@ -138,8 +139,8 @@ def start(host, port, index_filename, process_callback=None, respond_callback=No
                         for field in request.split('&'):
                             k, v = field.split('=')
                             data[k] = v
-                except Exception as e:
-                    print(e)
+                except:
+                    print('Error while parsing user data.')
                     
                 #processing data
                 result = None

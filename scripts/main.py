@@ -24,6 +24,7 @@ gc.collect()
 # configuration and magic numbers
 # -------------------------------------------------------------------
 
+# configuration index file
 SERVER_INDEX = 'main_index.html'
 
 # gpio definitions
@@ -36,12 +37,15 @@ SDA_PIN = 13            # aux I2C data
 # possible webserver responses
 SERVER_PROCESS_EMPTY = 0
 SERVER_PROCESS_SAVE = 1
-SERVER_PROCESS_INCOMPLETE = 2
 SERVER_PROCESS_ERROR = 254
 SERVER_PROCESS_REBOOT = 255
 
+# configuration dictionaries - for main and boot config
 CONFIG = {} 
 CONFIG_BOOT = {}
+
+# strings to be injected in place of '%s' in HTTP response
+SERVER_RESPONSE_DATA = []
 
 
 
@@ -125,10 +129,61 @@ def mqtt_publish(temperature, humidity):
 # webserver
 # -------------------------------------------------------------------
 
+#TODO ?
+def server_configure_response_data():
+    global SERVER_RESPONSE_DATA
+    #SERVER_RESPONSE_DATA
+
 # execute data received from user (if 255 returned, the server will stop)
 def server_process_data(data):
-    print("\nReceived data:")
-    print(data)
+    global CONFIG
+    try:
+        print("Received data:")
+        print(data)
+        print('\n')
+
+        if len(data) == 0:
+            return SERVER_PROCESS_EMPTY
+        
+        if data.get('REBOOT'):
+            return SERVER_PROCESS_REBOOT
+        else:
+            if data.get('LIGHT_ON'):
+                CONFIG['LIGHT_ON'] = data.get('LIGHT_ON').replace('%3A', ':')
+            if data.get('LIGHT_OFF'):
+                CONFIG['LIGHT_OFF'] = data.get('LIGHT_OFF').replace('%3A', ':')
+
+            if data.get('PWM1_DAY'):
+                CONFIG['PWM1_DAY'] = data.get('PWM1_DAY')
+            if data.get('PWM1_NIGHT'):
+                CONFIG['PWM1_NIGHT'] = data.get('PWM1_NIGHT')
+            if data.get('PWM2_DAY'):
+                CONFIG['PWM2_DAY'] = data.get('PWM2_DAY')
+            if data.get('PWM2_NIGHT'):
+                CONFIG['PWM2_NIGHT'] = data.get('PWM2_NIGHT')
+            if data.get('PWM3_DAY'):
+                CONFIG['PWM3_DAY'] = data.get('PWM3_DAY')
+            if data.get('PWM3_NIGHT'):
+                CONFIG['PWM3_NIGHT'] = data.get('PWM3_NIGHT')
+            if data.get('PWM4_DAY'):
+                CONFIG['PWM4_DAY'] = data.get('PWM4_DAY')
+            if data.get('PWM4_NIGHT'):
+                CONFIG['PWM4_NIGHT'] = data.get('PWM4_NIGHT')
+
+            if data.get('MQTT_SERVER'):
+                CONFIG['MQTT_SERVER'] = data.get('MQTT_SERVER')
+            if data.get('MQTT_CHANNEL_ID'):
+                CONFIG['MQTT_CHANNEL_ID'] = data.get('MQTT_CHANNEL_ID')
+            if data.get('MQTT_WRITE_KEY'):
+                CONFIG['MQTT_WRITE_KEY'] = data.get('MQTT_WRITE_KEY')
+            if data.get('MQTT_PUBLISH_PERIOD'):
+                CONFIG['MQTT_PUBLISH_PERIOD'] = data.get('MQTT_PUBLISH_PERIOD')
+
+            config.main_write()
+            return SERVER_PROCESS_SAVE
+    except:
+        print('Error while processing user data.')
+        return SERVER_PROCESS_ERROR
 
 
 # response webpage to be returned to the user
@@ -143,7 +198,7 @@ def server_respond(process_result):
     elif process_result == SERVER_PROCESS_REBOOT:
         info = 'Rebooting...'
 
-
+    #TODO initialize once and change info only ?
     data = (CONFIG.get('LIGHT_ON'), CONFIG.get('LIGHT_OFF'), \
         CONFIG.get('PWM1_DAY'), CONFIG.get('PWM1_NIGHT'), CONFIG.get('PWM2_DAY'), CONFIG.get('PWM2_NIGHT'),
         CONFIG.get('PWM3_DAY'), CONFIG.get('PWM3_NIGHT'), CONFIG.get('PWM4_DAY'), CONFIG.get('PWM4_NIGHT'),
