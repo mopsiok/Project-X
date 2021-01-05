@@ -24,6 +24,8 @@ gc.collect()
 # configuration and magic numbers
 # -------------------------------------------------------------------
 
+SERVER_INDEX = 'main_index.html'
+
 # gpio definitions
 RELAY_PIN = 5           # light relay
 SENSOR_PIN = 4          # DHT sensor
@@ -40,8 +42,6 @@ SERVER_PROCESS_REBOOT = 255
 
 CONFIG = {} 
 CONFIG_BOOT = {}
-WEBPAGE_SPLITTED = []
-WEBPAGE_INSERT_INDEX = []
 
 
 
@@ -125,48 +125,14 @@ def mqtt_publish(temperature, humidity):
 # webserver
 # -------------------------------------------------------------------
 
-WEBPAGE_CODE = ''
-def server_load_webpage():
-    global WEBPAGE_SPLITTED, WEBPAGE_INSERT_INDEX
-    global WEBPAGE_CODE
-
-    WEBPAGE_SPLITTED = []
-    WEBPAGE_INSERT_INDEX = []
-    try:
-        f = open('main_index.html')
-        tmp = f.read()
-        for part in tmp.split("%s"):
-            while len(part) > 0:
-                WEBPAGE_SPLITTED.append(part[:800])
-                part = part[800:]
-            WEBPAGE_SPLITTED.append("%s")
-            WEBPAGE_INSERT_INDEX.append(len(WEBPAGE_SPLITTED) - 1)
-
-        #delete last extra item
-        _ = WEBPAGE_SPLITTED.pop()
-        _ = WEBPAGE_INSERT_INDEX.pop()
-
-        WEBPAGE_CODE = tmp
-        del part
-        del tmp
-    finally:
-        f.close()
-    gc.collect()
-
-    # for i in range(len(WEBPAGE_SPLITTED)):
-    #     print('\n\n===%i===' % i)
-    #     print(WEBPAGE_SPLITTED[i])
-    # print(WEBPAGE_INSERT_INDEX)
-
-
-# execute data received from user (if 255 returned, the sever will stop)
+# execute data received from user (if 255 returned, the server will stop)
 def server_process_data(data):
     print("\nReceived data:")
     print(data)
 
 
 # response webpage to be returned to the user
-def server_respond(conn, process_result=SERVER_PROCESS_EMPTY):
+def server_respond(process_result):
     info = ''
     if process_result == SERVER_PROCESS_SAVE:
         info = 'Configuration saved.'
@@ -184,13 +150,7 @@ def server_respond(conn, process_result=SERVER_PROCESS_EMPTY):
         CONFIG.get('MQTT_SERVER'), CONFIG.get('MQTT_CHANNEL_ID'), CONFIG.get('MQTT_WRITE_KEY'), CONFIG.get('MQTT_PUBLISH_PERIOD'),
         info)
 
-    data_index = 0
-    for index in range(len(WEBPAGE_SPLITTED)):
-        if index in WEBPAGE_INSERT_INDEX:
-            conn.write(data[data_index])
-            data_index += 1
-        else:
-            conn.write(WEBPAGE_SPLITTED[index])
+    webserver.send_webpage(data)
 
 
 
@@ -217,14 +177,13 @@ wifi_err, network_info = wifi_connect(ssid, password)
 ip = network_info[0]
 
 #starting webserver
-server_load_webpage()
-webserver.start(ip, process_callback=server_process_data, respond_callback=server_respond)
-
-
-#TODO change webpage display in boot.py (NOT COMPATIBLE with current webserver.py)
+webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
 
 #TODO wywalic load_webpage i respond do modulu, w funkcji uruchamiania podawac jakas analogie dla data zeby z zewnatrz nie trzeba bylo 
 # !! albo zrobic funkcje pomocnicza ktora uwzglednia tylko load_webpage i obsluge globalnych tablic, i jest wykonywana z poziomu respond na zasadzie generate_webpage(data)
+# wywalic WEBPAGE_CODE
+
+#TODO change webpage display in boot.py (NOT COMPATIBLE with current webserver.py)
 
 #TODO to be deleted
 for i in range(2):
@@ -233,7 +192,7 @@ for i in range(2):
     relay.on()
     utime.sleep_ms(250)
     
-    mqtt_publish(22+i*0.5, 70+i)
-    utime.sleep(30)
+    #mqtt_publish(22+i*0.5, 70+i)
+    #utime.sleep(30)
 
 print('### Quitting main.py ###')
