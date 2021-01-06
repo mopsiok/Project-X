@@ -131,36 +131,33 @@ def mqtt_publish(temperature, humidity):
 # main application timer, executed once in a second
 # -------------------------------------------------------------------
 
-timer_presc = [0,0]
+timer_presc = [0,0,0]
+timer_hardware_flag = False
+timer_sensor_flag = False
+timer_mqtt_flag = False
+timer_ntp_flag = False
+timer_gc_flag = False
+timer_meminfo_flag = False
 def main_timer_callback(tim):
-    global timer_presc
+    global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_mqtt_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
     for i in range(len(timer_presc)):
         timer_presc[i] += 1
     
-    day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
-    update_hardware(day_flag)
+    timer_hardware_flag = True
+    timer_gc_flag = True
 
-    #h,m,s = timing.get_time()
-    #print('%02i:%02i:%02i - %s' % (h, m, s, ('DAY TIME' if day_flag else 'NIGHT TIME')))
-
-    #reading the sensor
     if timer_presc[0] >= 5:
         timer_presc[0] = 0
-        #TODO read sensor and re-calculate average
+        timer_sensor_flag = True
 
-    #send measurements and synchronize time
     if timer_presc[1] >= 60:
         timer_presc[1] = 0
+        timer_mqtt_flag = True
+        timer_ntp_flag = True
 
-        #TODO read moving average and publish it
-        #mqtt_publish(22+i*0.5, 70+i)
-
-        timing.ntp_synchronize()
-
-    #garbage collector
-    gc.collect()
-    gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
-    micropython.mem_info()
+    if timer_presc[2] >= 10:
+        timer_presc[2] = 0
+        timer_meminfo_flag = True
 
 
 # set relay and fans according to current time
@@ -208,7 +205,46 @@ timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
 while True:
-    utime.sleep_ms(100)
+    try:
+        #updating hardware
+        if timer_hardware_flag:
+            timer_hardware_flag = False
+            day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
+            update_hardware(day_flag)
+
+            h,m,s = timing.get_time()
+            print('%02i:%02i:%02i - %s' % (h, m, s, ('DAY TIME' if day_flag else 'NIGHT TIME')))
+
+        #reading the sensor
+        if timer_sensor_flag:
+            timer_sensor_flag = False
+            #TODO read sensor and re-calculate average
+        
+        #sending data to MQTT broker
+        if timer_mqtt_flag:
+            timer_mqtt_flag = False
+            #TODO read moving average and publish it
+            #mqtt_publish(22+i*0.5, 70+i)
+
+        #time synchronization
+        if timer_ntp_flag:
+            timer_ntp_flag = False
+            if timing.ntp_synchronize() == 0:
+                print('NTP synchronization completed.')
+
+        #garbage collector
+        if timer_gc_flag:
+            timer_gc_flag = False
+            gc.collect()
+            gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+
+        #memory info
+        if timer_meminfo_flag:
+            timer_meminfo_flag = False
+            micropython.mem_info()
+
+    except Exception as e:
+        print(e)
 
 #unhandled error occured - rebooting
 print('Gone outside of main loop!')
