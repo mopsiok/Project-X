@@ -4,7 +4,7 @@ import gc
 from umqtt.simple import MQTTClient
 import config, webserver, timing, BSP
 gc.collect()
-import network, machine, ubinascii, utime
+import network, machine, ubinascii, utime, micropython
 gc.collect()
 
 
@@ -60,6 +60,7 @@ def main_timer_callback(tim):
     #garbage collector
     gc.collect()
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+    micropython.mem_info()
 
 
 # set relay and fans according to current time
@@ -215,6 +216,7 @@ def server_process_data(data):
                 value = data[key]
                 if (key in CONFIG.keys()) and value:
                     CONFIG[key] = value.replace('%3A', ':')
+                    
             config.main_write()
             return SERVER_PROCESS_SAVE
     except:
