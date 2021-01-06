@@ -2,20 +2,9 @@
 
 import gc
 from umqtt.simple import MQTTClient
+import config, webserver
 gc.collect()
-import config
-gc.collect()
-import webserver
-gc.collect()
-import network
-gc.collect()
-import machine
-gc.collect()
-import ubinascii
-gc.collect()
-import utime
-gc.collect()
-import sys #TBD
+import network, machine, ubinascii, utime
 gc.collect()
 
 
@@ -43,9 +32,6 @@ SERVER_PROCESS_REBOOT = 255
 # configuration dictionaries - for main and boot config
 CONFIG = {} 
 CONFIG_BOOT = {}
-
-# strings to be injected in place of '%s' in HTTP response
-SERVER_RESPONSE_DATA = []
 
 
 
@@ -103,36 +89,55 @@ def wifi_connect(ssid, password, timeout=10000):
 def mqtt_publish(temperature, humidity):
     server = CONFIG.get('MQTT_SERVER')
     channel_id = CONFIG.get('MQTT_CHANNEL_ID')
-    key = CONFIG.get('MQTT_WRITE_KEY')    
-    if (not server) or (not channel_id) or (not key):
+    key = CONFIG.get('MQTT_WRITE_KEY')
+
+    if server and channel_id and key:
+        try:
+            client_id = aux_generate_id()
+            topic = "channels/" + channel_id + "/publish/" + key
+            payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
+            client = MQTTClient(client_id, server)
+            client.connect()
+            client.publish(topic, payload)
+            print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
+            result = 0
+        except Exception as e:
+            print(e) #sys.print_exception(e)
+            result = 2
+        finally:
+            client.disconnect()
+    else:
         print('Missing MQTT config, sending data skipped')
-        return 1
+        result = 1
 
-    try:
-        client_id = aux_generate_id()
-        topic = "channels/" + channel_id + "/publish/" + key
-        payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
-        client = MQTTClient(client_id, server)
-        client.connect()
-        client.publish(topic, payload)
-        client.disconnect()
+    gc.collect()
+    return result
 
-        print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
-        return 0
-    except Exception as e:
-        sys.print_exception(e)
-        return 2
-        
 
 
 # -------------------------------------------------------------------
 # webserver
 # -------------------------------------------------------------------
 
-#TODO ?
-def server_configure_response_data():
-    global SERVER_RESPONSE_DATA
-    #SERVER_RESPONSE_DATA
+# fill the response data list with user data
+#   info - string, response message for the user
+def server_update_response_data(info):
+    webserver.WEBPAGE_INSERT_DATA[0] = CONFIG.get('LIGHT_ON')
+    webserver.WEBPAGE_INSERT_DATA[1] = CONFIG.get('LIGHT_OFF')
+    webserver.WEBPAGE_INSERT_DATA[2] = CONFIG.get('PWM1_DAY')
+    webserver.WEBPAGE_INSERT_DATA[3] = CONFIG.get('PWM1_NIGHT')
+    webserver.WEBPAGE_INSERT_DATA[4] = CONFIG.get('PWM2_DAY')
+    webserver.WEBPAGE_INSERT_DATA[5] = CONFIG.get('PWM2_NIGHT')
+    webserver.WEBPAGE_INSERT_DATA[6] = CONFIG.get('PWM3_DAY')
+    webserver.WEBPAGE_INSERT_DATA[7] = CONFIG.get('PWM3_NIGHT')
+    webserver.WEBPAGE_INSERT_DATA[8] = CONFIG.get('PWM4_DAY')
+    webserver.WEBPAGE_INSERT_DATA[9] = CONFIG.get('PWM4_NIGHT')
+    webserver.WEBPAGE_INSERT_DATA[10] = CONFIG.get('MQTT_SERVER')
+    webserver.WEBPAGE_INSERT_DATA[11] = CONFIG.get('MQTT_CHANNEL_ID')
+    webserver.WEBPAGE_INSERT_DATA[12] = CONFIG.get('MQTT_WRITE_KEY')
+    webserver.WEBPAGE_INSERT_DATA[13] = CONFIG.get('MQTT_PUBLISH_PERIOD')
+    webserver.WEBPAGE_INSERT_DATA[14] = info
+
 
 # execute data received from user (if 255 returned, the server will stop)
 def server_process_data(data):
@@ -198,13 +203,8 @@ def server_respond(process_result):
     elif process_result == SERVER_PROCESS_REBOOT:
         info = 'Rebooting...'
 
-    #TODO initialize once and change info only ?
-    data = (CONFIG.get('LIGHT_ON'), CONFIG.get('LIGHT_OFF'), \
-        CONFIG.get('PWM1_DAY'), CONFIG.get('PWM1_NIGHT'), CONFIG.get('PWM2_DAY'), CONFIG.get('PWM2_NIGHT'),
-        CONFIG.get('PWM3_DAY'), CONFIG.get('PWM3_NIGHT'), CONFIG.get('PWM4_DAY'), CONFIG.get('PWM4_NIGHT'),
-        CONFIG.get('MQTT_SERVER'), CONFIG.get('MQTT_CHANNEL_ID'), CONFIG.get('MQTT_WRITE_KEY'), CONFIG.get('MQTT_PUBLISH_PERIOD'),
-        info)
-    webserver.send_webpage(data)
+    server_update_response_data(info)
+    webserver.send_webpage()
 
 
 

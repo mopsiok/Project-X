@@ -19,6 +19,9 @@ WEBPAGE_SPLITTED = []
 # indexes of empty fields in WEBPAGE_SPLITTED - instead of them, user data will be sent
 WEBPAGE_INSERT_INDEX = []
 
+# user data to be injected instead of '%s'
+WEBPAGE_INSERT_DATA = []
+
 
 
 # -------------------------------------------------------------------
@@ -31,6 +34,7 @@ WEBPAGE_INSERT_INDEX = []
 def load_webpage(filename):
     global WEBPAGE_SPLITTED
     global WEBPAGE_INSERT_INDEX
+    global WEBPAGE_INSERT_DATA
     try:
         f = open(filename)
         buf = ''
@@ -51,6 +55,7 @@ def load_webpage(filename):
                     #add escape item and save its index
                     WEBPAGE_SPLITTED.append('')
                     WEBPAGE_INSERT_INDEX.append(len(WEBPAGE_SPLITTED) - 1)
+                    WEBPAGE_INSERT_DATA.append('')
                     buf = buf[2:]
                 elif pos > 0:
                     #add regular item
@@ -60,35 +65,35 @@ def load_webpage(filename):
                     #add rest of the buffer (no more %s)
                     WEBPAGE_SPLITTED.append(buf)
                     buf = ''
+        print("Page loaded, escaped %i instances of '%%s'." % len(WEBPAGE_INSERT_DATA))
     finally:
         f.close()
     gc.collect()
 
 
-# send response webpage stored in global WEBPAGE_SPLITTED with injected user data
-# conn - 
-# escape_data - list of strings to be injected in the corresponding '%s' in the source HTML file
+# send response webpage stored in WEBPAGE_SPLITTED with injected user data stored in WEBPAGE_INSERT_DATA
 # returns error code (0 = ok; 1 = no socket; 2 = unknown error)
-def send_webpage(escape_data):
+def send_webpage():
     global TCP_SOCK
-    try:
-        if TCP_SOCK == None:
-            print('No socket specified.')
-            return 1
+    if TCP_SOCK:
+        try:
+            data_index = 0
+            for index in range(len(WEBPAGE_SPLITTED)):
+                if index in WEBPAGE_INSERT_INDEX:
+                    TCP_SOCK.write(WEBPAGE_INSERT_DATA[data_index])
+                    data_index += 1
+                else:
+                    TCP_SOCK.write(WEBPAGE_SPLITTED[index])
+            result = 0
+        except:
+            print('Error while sending HTTP response.')
+            result = 2
+    else:
+        print('No socket specified.')
+        result = 1
 
-        data_index = 0
-        for index in range(len(WEBPAGE_SPLITTED)):
-            if index in WEBPAGE_INSERT_INDEX:
-                TCP_SOCK.write(escape_data[data_index])
-                data_index += 1
-            else:
-                TCP_SOCK.write(WEBPAGE_SPLITTED[index])
-        gc.collect()
-        return 0
-    except:
-        print('Error while sending HTTP response.')
     gc.collect()
-    return 2
+    return result
 
 
 # run a local webserver
@@ -159,9 +164,12 @@ def start(host, port, index_filename, process_callback=None, respond_callback=No
             finally:
                 TCP_SOCK.close()
                 utime.sleep_ms(500) #some time to avoid connection reset
+                gc.collect()
 
     except Exception as e: 
         print(e)
     finally:
         s.close()
         print('Webserver stopped.')
+
+    gc.collect()
