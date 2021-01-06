@@ -33,19 +33,19 @@ def ntp_synchronize():
 
 
 # checks if current time is within specified range
-#   day_start:  string, start time in format "HH:MM"
-#   day_end:    string, end time in format "HH:MM"
+#   day_start:  string, start time in format "HH:MM:SS"
+#   day_end:    string, end time in format "HH:MM:SS"
 #   returns:    True/False
 def check_day_mode(day_start, day_end):
     try:
         start = [int(i) for i in day_start.split(':')]
-        start = 3600*start[0] + 60*start[1]
+        start = 3600*start[0] + 60*start[1] + start[2]
 
         end = [int(i) for i in day_end.split(':')]
-        end = 3600*end[0] + 60*end[1]
+        end = 3600*end[0] + 60*end[1] + end[2]
 
         current = get_time()
-        current = 3600*current[0] + 60*current[1]
+        current = 3600*current[0] + 60*current[1] + current[2]
 
         if start <= end:
             return (current >= start) and (current < end)
@@ -53,6 +53,7 @@ def check_day_mode(day_start, day_end):
             return (current >= start) or (current < end)
     except:
         print("Error while checking day mode.")
+        return False
 
 
 # get current time

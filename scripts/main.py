@@ -2,7 +2,7 @@
 
 import gc
 from umqtt.simple import MQTTClient
-import config, webserver, timing
+import config, webserver, timing, BSP
 gc.collect()
 import network, machine, ubinascii, utime
 gc.collect()
@@ -15,13 +15,6 @@ gc.collect()
 
 # configuration index file
 SERVER_INDEX = 'main_index.html'
-
-# gpio definitions
-RELAY_PIN = 5           # light relay
-SENSOR_PIN = 4          # DHT sensor
-PWM_PINS = [0,2,14,15]  # PWM for fans 1..4
-SCL_PIN = 12            # aux I2C clock
-SDA_PIN = 13            # aux I2C data
 
 # possible webserver responses
 SERVER_PROCESS_EMPTY = 0
@@ -207,9 +200,6 @@ config.main_read()
 CONFIG = config.MAIN_CONFIG
 CONFIG_BOOT = config.BOOT_CONFIG
 
-#defining GPIOs
-relay = machine.Pin(RELAY_PIN, machine.Pin.OUT)
-
 #connecting to WiFi
 ssid = CONFIG_BOOT.get('WIFI_SSID')
 password = CONFIG_BOOT.get('WIFI_PASS')
@@ -218,7 +208,10 @@ ip = network_info[0]
 
 #getting time
 err = timing.ntp_synchronize()
-print("Synchronized to %i.%i.%i %i:%i:%i" % timing.get_datetime())
+print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
+
+#initialize hardware
+BSP.init_all()
 
 #starting config webserver
 webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
