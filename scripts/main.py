@@ -49,6 +49,12 @@ def aux_get_id():
 def aux_generate_id():
     return "%s_%04i" % (aux_get_id(), (utime.ticks_us() % 10000))
 
+# reboot the board
+def esp_reboot():
+    print('Rebooting ...')
+    machine.reset()
+
+
 
 # -------------------------------------------------------------------
 # wifi-related functions
@@ -80,6 +86,13 @@ def wifi_connect(ssid, password, timeout=10000):
     info = sta.ifconfig()
     print('Connected:', info)
     return (0, info)
+
+
+# disconnect from a WiFi network
+def wifi_disconnect():
+    print('Disconnecting from WiFi...')
+    sta = network.WLAN(network.STA_IF)
+    sta.disconnect()
 
 
 # open a socket to MQTT broker, send data and close the socket
@@ -203,17 +216,27 @@ password = CONFIG_BOOT.get('WIFI_PASS')
 wifi_err, network_info = wifi_connect(ssid, password)
 ip = network_info[0]
 
+
+
 #starting config webserver
 webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
 
+#server is stopped on user demand or due to error - rebooting
+try:
+    utime.sleep_ms(100)
+    wifi_disconnect()
+    utime.sleep_ms(100)
+finally:
+    esp_reboot()
+
 #TODO to be deleted
-for i in range(2):
-    relay.off()
-    utime.sleep_ms(250)
-    relay.on()
-    utime.sleep_ms(250)
+# for i in range(2):
+#     relay.off()
+#     utime.sleep_ms(250)
+#     relay.on()
+#     utime.sleep_ms(250)
     
-    #mqtt_publish(22+i*0.5, 70+i)
-    #utime.sleep(30)
+#     #mqtt_publish(22+i*0.5, 70+i)
+#     #utime.sleep(30)
 
 print('### Quitting main.py ###')
