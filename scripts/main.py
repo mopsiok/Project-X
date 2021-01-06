@@ -218,13 +218,14 @@ while True:
         #reading the sensor
         if timer_sensor_flag:
             timer_sensor_flag = False
-            #TODO read sensor and re-calculate average
+            temp, hum = BSP.sensor_measure()
+            print('Sensor: %04.1f*C, %04.1f%%' % (temp, hum))
         
         #sending data to MQTT broker
         if timer_mqtt_flag:
             timer_mqtt_flag = False
-            #TODO read moving average and publish it
-            #mqtt_publish(22+i*0.5, 70+i)
+            temp, hum = BSP.sensor_get_average()
+            mqtt_publish(temp, hum)
 
         #time synchronization
         if timer_ntp_flag:
