@@ -151,17 +151,17 @@ def start(host, port, index_filename, process_callback=None, respond_callback=No
                 if respond_callback != None:
                     respond_callback(result)
 
-                TCP_SOCK.close()
-
                 #stopping server
                 if result == 255:
                     running = False
             except Exception as e:
                 print(e)
-        
-        utime.sleep_ms(500)
-        s.close()
-        print('Webserver stopped.')
+            finally:
+                TCP_SOCK.close()
+                utime.sleep_ms(500) #some time to avoid connection reset
 
     except Exception as e: 
         print(e)
+    finally:
+        s.close()
+        print('Webserver stopped.')
