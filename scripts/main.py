@@ -27,6 +27,58 @@ CONFIG = {}
 CONFIG_BOOT = {}
 
 
+# -------------------------------------------------------------------
+# main application timer, executed once in a second
+# -------------------------------------------------------------------
+
+timer_presc = [0,0]
+def main_timer_callback(tim):
+    global timer_presc
+    for i in range(len(timer_presc)):
+        timer_presc[i] += 1
+    
+    day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
+    update_hardware(day_flag)
+
+    #h,m,s = timing.get_time()
+    #print('%02i:%02i:%02i - %s' % (h, m, s, ('DAY TIME' if day_flag else 'NIGHT TIME')))
+
+    #reading the sensor
+    if timer_presc[0] >= 5:
+        timer_presc[0] = 0
+        #TODO read sensor and re-calculate average
+
+    #send measurements and synchronize time
+    if timer_presc[1] >= 60:
+        timer_presc[1] = 0
+
+        #TODO read moving average and publish it
+        #mqtt_publish(22+i*0.5, 70+i)
+
+        timing.ntp_synchronize()
+
+    #garbage collector
+    gc.collect()
+    gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+
+
+# set relay and fans according to current time
+# day_flag: True = day; False - night
+def update_hardware(day_flag):
+    if day_flag:
+        BSP.relay_on()
+        BSP.fan_set(0, int(CONFIG['PWM1_DAY']))
+        BSP.fan_set(1, int(CONFIG['PWM2_DAY']))
+        BSP.fan_set(2, int(CONFIG['PWM3_DAY']))
+        BSP.fan_set(3, int(CONFIG['PWM4_DAY']))
+    else:
+        BSP.relay_off()
+        BSP.fan_set(0, int(CONFIG['PWM1_NIGHT']))
+        BSP.fan_set(1, int(CONFIG['PWM2_NIGHT']))
+        BSP.fan_set(2, int(CONFIG['PWM3_NIGHT']))
+        BSP.fan_set(3, int(CONFIG['PWM4_NIGHT']))
+
+
 
 # -------------------------------------------------------------------
 # aux functions
@@ -41,6 +93,7 @@ def aux_get_id():
 # generate a pseudo-random string based on module's unique ID and current time
 def aux_generate_id():
     return "%s_%04i" % (aux_get_id(), (utime.ticks_us() % 10000))
+
 
 # reboot the board
 def esp_reboot():
@@ -212,6 +265,10 @@ print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
 
 #initialize hardware
 BSP.init_all()
+
+#set up a 1Hz timer for main application
+timer = machine.Timer(-1)
+timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
 #starting config webserver
 webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)

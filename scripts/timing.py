@@ -27,7 +27,7 @@ def ntp_synchronize():
         year, month, day, hour, minute, second = utime.localtime(t)[:6]
         machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
         return 0
-    except e:
+    except Exception as e:
         print(e)
         return 1
 

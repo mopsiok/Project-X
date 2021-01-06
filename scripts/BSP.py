@@ -21,6 +21,9 @@ fans = []
 relay = None
 
 
+#TODO reading temperature and humidity, function for getting moving average value of frequently read sensor
+
+
 # -------------------------------------------------------------------
 # main features
 # -------------------------------------------------------------------
