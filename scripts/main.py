@@ -152,37 +152,10 @@ def server_process_data(data):
         if data.get('REBOOT'):
             return SERVER_PROCESS_REBOOT
         else:
-            if data.get('LIGHT_ON'):
-                CONFIG['LIGHT_ON'] = data.get('LIGHT_ON').replace('%3A', ':')
-            if data.get('LIGHT_OFF'):
-                CONFIG['LIGHT_OFF'] = data.get('LIGHT_OFF').replace('%3A', ':')
-
-            if data.get('PWM1_DAY'):
-                CONFIG['PWM1_DAY'] = data.get('PWM1_DAY')
-            if data.get('PWM1_NIGHT'):
-                CONFIG['PWM1_NIGHT'] = data.get('PWM1_NIGHT')
-            if data.get('PWM2_DAY'):
-                CONFIG['PWM2_DAY'] = data.get('PWM2_DAY')
-            if data.get('PWM2_NIGHT'):
-                CONFIG['PWM2_NIGHT'] = data.get('PWM2_NIGHT')
-            if data.get('PWM3_DAY'):
-                CONFIG['PWM3_DAY'] = data.get('PWM3_DAY')
-            if data.get('PWM3_NIGHT'):
-                CONFIG['PWM3_NIGHT'] = data.get('PWM3_NIGHT')
-            if data.get('PWM4_DAY'):
-                CONFIG['PWM4_DAY'] = data.get('PWM4_DAY')
-            if data.get('PWM4_NIGHT'):
-                CONFIG['PWM4_NIGHT'] = data.get('PWM4_NIGHT')
-
-            if data.get('MQTT_SERVER'):
-                CONFIG['MQTT_SERVER'] = data.get('MQTT_SERVER')
-            if data.get('MQTT_CHANNEL_ID'):
-                CONFIG['MQTT_CHANNEL_ID'] = data.get('MQTT_CHANNEL_ID')
-            if data.get('MQTT_WRITE_KEY'):
-                CONFIG['MQTT_WRITE_KEY'] = data.get('MQTT_WRITE_KEY')
-            if data.get('MQTT_PUBLISH_PERIOD'):
-                CONFIG['MQTT_PUBLISH_PERIOD'] = data.get('MQTT_PUBLISH_PERIOD')
-
+            for key in data.keys():
+                value = data[key]
+                if (key in CONFIG.keys()) and value:
+                    CONFIG[key] = value.replace('%3A', ':')
             config.main_write()
             return SERVER_PROCESS_SAVE
     except:
