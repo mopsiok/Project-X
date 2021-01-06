@@ -2,7 +2,7 @@
 
 import gc
 from umqtt.simple import MQTTClient
-import config, webserver
+import config, webserver, timing
 gc.collect()
 import network, machine, ubinascii, utime
 gc.collect()
@@ -106,10 +106,10 @@ def mqtt_publish(temperature, humidity):
 
     if server and channel_id and key:
         try:
-            client_id = aux_generate_id()
+            client = MQTTClient(aux_generate_id(), server)
             topic = "channels/" + channel_id + "/publish/" + key
             payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
-            client = MQTTClient(client_id, server)
+            
             client.connect()
             client.publish(topic, payload)
             print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
@@ -213,21 +213,20 @@ relay = machine.Pin(RELAY_PIN, machine.Pin.OUT)
 #connecting to WiFi
 ssid = CONFIG_BOOT.get('WIFI_SSID')
 password = CONFIG_BOOT.get('WIFI_PASS')
-wifi_err, network_info = wifi_connect(ssid, password)
+err, network_info = wifi_connect(ssid, password)
 ip = network_info[0]
 
-
+#getting time
+err = timing.ntp_synchronize()
+print("Synchronized to %i.%i.%i %i:%i:%i" % timing.get_datetime())
 
 #starting config webserver
 webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
 
 #server is stopped on user demand or due to error - rebooting
-try:
-    utime.sleep_ms(100)
-    wifi_disconnect()
-    utime.sleep_ms(100)
-finally:
-    esp_reboot()
+utime.sleep_ms(200)
+#TODO esp_reboot()
+    
 
 #TODO to be deleted
 # for i in range(2):
