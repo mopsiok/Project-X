@@ -21,13 +21,10 @@ def ntp_synchronize():
     try:
         extra_hour = 3600
         t = ntptime.time() + extra_hour #synchronize to Central European Time (UTC+1)
-        year, month, day, hour, minute, second = utime.localtime(t)[:6]
-
-        #optionally synchronize to Central European Summer Time (UTC+2)
-        if check_summertime(month, day, hour, minute):
+        if check_summertime(t): #optionally synchronize to Central European Summer Time (UTC+2)
             t += extra_hour
-            year, month, day, hour, minute, second = utime.localtime(t)[:6]
-
+        
+        year, month, day, hour, minute, second = utime.localtime(t)[:6]
         machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
         return 0
     except e:
@@ -82,8 +79,10 @@ def get_datetime():
 # -------------------------------------------------------------------
 
 # check if given date should be in summertime or regular time
-#   month, day, hour, minute - current date and time
-#   returns: True if summertime, False if regular time
-def check_summertime(month, day, hour, minute):
+#   t:          current time in seconds
+#   returns:    True if summertime, False if regular time
+def check_summertime(t):
+    #datetime = utime.localtime(t)
+
     #TODO
     return False
