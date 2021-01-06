@@ -1,34 +1,100 @@
 <html>
 <head>
-    <title>Project X booting page</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,"> 
-    <style>
-    html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
-    h1{color: #0F3376; padding: 2vh;}
-    p{font-size: 1.2rem;}
-    table{margin-left: auto; margin-right: auto;}
-    </style>
+<title>Project X</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,"> 
+<style>
+html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
+h1{color: #0F3376; padding: 2vh;}
+p{font-size: 1.1rem;}
+#dzio{
+font-size: 1.3rem;
+font-weight: bold;
+background-image: linear-gradient(90deg, 
+#cb2129 25%, 
+#ffd605 35%,
+#ffd605 60%, 
+#188f45 65%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent; 
+}
+table{margin-left: auto; margin-right: auto; padding-bottom: 20px;}
+td{width: 200px}
+input.pwm{width: 70px}
+</style>
 </head>
-	
+
 <body> 
-	<h1>Project X booting page</h1> 
-	
-	<form action="" method="get">
-        <label>WiFi credentials:</label>
-        <table>
-            <tr>
-                <td><label>SSID:</label></td>
-                <td><input type="text" name="WIFI_SSID" value="%s" /></td>
-            </tr>
-            <tr>
-                <td><label>Password:</label></td>
-                <td><input type="text" name="WIFI_PASS" value="%s" /></td>
-            </tr>
-        </table>
-        <input type="submit" value="Save" />
-        <input type="submit" name="REBOOT" value="Reboot" />
-    </form>
-    <p> %s </p>
+<h1>Project X</h1> 
+
+<form action="" method="get">
+<p>WiFi credentials:</p>
+<table>
+<tr>
+<td>SSID:</td>
+<td><input type="text" name="WIFI_SSID" value="%s" /></td>
+</tr>
+<tr>
+<td>Password:</td>
+<td><input type="text" name="WIFI_PASS" value="%s" /></td>
+</tr>
+</table>
+
+<p>Configuration:</p>
+<table>
+<tr>
+<td>Light on time:</td>
+<td><input type="text" name="LIGHT_ON" value="%s" maxlength="8" /></td>
+</tr>
+<tr>
+<td>Light off time:</td>
+<td><input type="text" name="LIGHT_OFF" value="%s" maxlength="8" /></td>
+</tr>
+<tr>
+<td>PWM 1 (day/night) [%]:</td>
+<td><input type="number" name="PWM1_DAY" class="pwm" min="0" max="100" value="%s" />
+<input type="number" name="PWM1_NIGHT" class="pwm" min="0" max="100" value="%s" /></td>
+</tr>
+<tr>
+<td>PWM 2 (day/night) [%]:</td>
+<td><input type="number" name="PWM2_DAY" class="pwm" min="0" max="100" value="%s" />
+<input type="number" name="PWM2_NIGHT" class="pwm" min="0" max="100" value="%s" /></td>
+</tr>
+<tr>
+<td>PWM 3 (day/night) [%]:</td>
+<td><input type="number" name="PWM3_DAY" class="pwm" min="0" max="100" value="%s" />
+<input type="number" name="PWM3_NIGHT" class="pwm" min="0" max="100" value="%s" /></td>
+</tr>
+<tr>
+<td>PWM 4 (day/night) [%]:</td>
+<td><input type="number" name="PWM4_DAY" class="pwm" min="0" max="100" value="%s" />
+<input type="number" name="PWM4_NIGHT" class="pwm" min="0" max="100" value="%s" /></td>
+</tr>
+</table>
+
+<p>MQTT Data streaming:</p>
+<table>
+<tr>
+<td>Server:</td>
+<td><input type="text" name="MQTT_SERVER" value="%s" /></td>
+</tr>
+<tr>
+<td>Channel ID:</td>
+<td><input type="text" name="MQTT_CHANNEL_ID" value="%s" /></td>
+</tr>
+<tr>
+<td>Write Key:</td>
+<td><input type="text" name="MQTT_WRITE_KEY" value="%s" /></td>
+</tr>
+<tr>
+<td>Publish period [s]:</td>
+<td><input type="number" name="MQTT_PUBLISH_PERIOD" min="21" max="3600" value="%s" /></td>
+</tr>
+</table>
+<input type="submit" value="Save" />
+<input type="submit" name="REBOOT" value="Reboot" />
+</form>
+<p> %s </p>
+<marquee scrollamount="10"><p id="dzio">DZIO&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspDZIOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p></marquee>
 </body>
 </html>

@@ -4,104 +4,55 @@
 # configuration
 # -------------------------------------------------------------------
 
+CONFIG_FILE = 'boot.conf'
 SETTINGS_DELIM = ' := '
 
-BOOT_FILE = 'boot.conf'
-BOOT_REQUIRED_KEYS = ('WIFI_SSID','WIFI_PASS')
-BOOT_CONFIG = {}
-
-MAIN_FILE = 'main.conf'
-MAIN_REQUIRED_KEYS = ('LIGHT_ON', 'LIGHT_OFF', \
-    'PWM1_DAY', 'PWM1_NIGHT', 'PWM2_DAY', 'PWM2_NIGHT', 'PWM3_DAY', 'PWM3_NIGHT', 'PWM4_DAY', 'PWM4_NIGHT',
-    'MQTT_SERVER','MQTT_CHANNEL_ID','MQTT_WRITE_KEY','MQTT_PUBLISH_PERIOD')
-MAIN_CONFIG = {}
 
 
 
 # -------------------------------------------------------------------
-# low-level read/write functions
+# main functions
 # -------------------------------------------------------------------
 
-# read configuration from file, check if it is complete and return error code and config dictionary
-# error_code: 0 = OK; 1 = config not complete; 2 = read error
-def read(filename, required_keys=[]):
-    config_tmp = {}
+# read configuration from file to dictionary and return error code
+# config:       dict, output config object
+# returns:      0 = OK; 1 = read error
+def read(config):
+    result = 0
     try:
-        f = open(filename, 'r')
-        tmp = f.read()
-        tmp = tmp.replace('\r', '') #windows-style new line correction
-        f.close()
-        for line in tmp.split('\n'):
-            try:
-                key,value = line.split(SETTINGS_DELIM)
-                config_tmp[key] = value
-            except:
-                pass
-        
-        print('Config file contents:')
-        print(config_tmp)
-
-        #check if every key is defined            
-        if all (key in config_tmp.keys() for key in required_keys):
-            print('Config OK')
-            return (0, config_tmp)
-        else:
-            print('Config not complete')
-            return (1, config_tmp)
+        f = open(CONFIG_FILE, 'r')
+        config.clear()
+        while True:
+            line = f.readline()
+            if len(line) > 0:
+                line = line.replace('\r', '').replace('\n', '')
+                try:
+                    key,value = line.split(SETTINGS_DELIM)
+                    config[key] = value
+                except:
+                    pass
+            else:
+                break
     except Exception as e:
         print(e)
-        return (2, config_tmp)
+        result = 1
+    finally:
+        f.close()
+    return result
 
 
 # write config dictionary to file and return error code
-# error_code: 0 = OK; 1 = write error
-def write(filename, config):
+# config:       dict, input config object
+# returns:      0 = OK; 1 = write error
+def write(config):
+    result = 0
     try:
-        tmp = ""
+        f = open(CONFIG_FILE, 'w')
         for key in config:
-            tmp += key + SETTINGS_DELIM + config.get(key) + '\n'
-
-        f = open(filename, 'w')
-        f.write(tmp)
-        f.close()
-        return 0
+            f.write(key + SETTINGS_DELIM + config.get(key) + '\n')
     except Exception as e:
         print(e)
-        return 1
-
-
-
-# -------------------------------------------------------------------
-# high-level functions
-# -------------------------------------------------------------------
-
-# reads boot config file to global BOOT_CONFIG and returns error code
-def boot_read():
-    global BOOT_CONFIG
-    
-    print('Reading boot config file...')
-    err, config = read(BOOT_FILE, BOOT_REQUIRED_KEYS)
-    for key in config:
-        BOOT_CONFIG[key] = config.get(key)
-    return err
-
-# writes global BOOT_CONFIG to boot config file and returns error code
-def boot_write():
-    print('Writing boot config file...')
-    err = write(BOOT_FILE, BOOT_CONFIG)
-    return err
-
-# reads main config file to global MAIN_CONFIG and returns error code
-def main_read():
-    global MAIN_CONFIG
-    print('Reading main config file...')
-    err, config = read(MAIN_FILE, MAIN_REQUIRED_KEYS)
-    for key in config:
-        MAIN_CONFIG[key] = config.get(key)
-    return err
-
-# writes global MAIN_CONFIG to main config file and returns error code
-def main_write():
-    print('Writing main config file...')
-    err = write(MAIN_FILE, MAIN_CONFIG)
-    return err
+        result = 1
+    finally:
+        f.close()
+    return result
