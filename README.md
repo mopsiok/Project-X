@@ -1,6 +1,8 @@
-# Project_X
+# Project X
 
 Micropython project for GPIO control and atmospheric measurements over WiFi network.
+
+![Project X](Project_X_small.jpg)
 
 ### Features
 * easy configuration using webserver
