@@ -89,7 +89,7 @@ def sensor_measure():
             humidity_average = ((humidity_average * (SENSOR_AVERAGE_SAMPLES-1)) + hum) / SENSOR_AVERAGE_SAMPLES
         return (temp, hum)
     except Exception as e:
-        print('Sensor measure failed: ', e)
+        print('[ERR] Sensor measure failed:', e)
         return (0,0)
 
 

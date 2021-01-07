@@ -28,7 +28,7 @@ def ntp_synchronize():
         machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
         return 0
     except Exception as e:
-        print(e)
+        print('[ERR] NTP synchronization failed:',e)
         return 1
 
 
@@ -51,8 +51,8 @@ def check_day_mode(day_start, day_end):
             return (current >= start) and (current < end)
         else:
             return (current >= start) or (current < end)
-    except:
-        print("Error while checking day mode.")
+    except Exception as e:
+        print('[ERR] Day mode checking failed:',e)
         return False
 
 

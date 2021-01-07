@@ -114,7 +114,7 @@ def mqtt_publish(temperature, humidity):
             print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
             result = 0
         except Exception as e:
-            print(e) #sys.print_exception(e)
+            print('[ERR] MQTT publish failed:',e)
             result = 2
         finally:
             client.disconnect()
@@ -150,7 +150,7 @@ def main_timer_callback(tim):
         timer_presc[0] = 0
         timer_sensor_flag = True
 
-    if timer_presc[1] >= 60:
+    if timer_presc[1] >= int(CONFIG['MQTT_PUBLISH_PERIOD']):
         timer_presc[1] = 0
         timer_mqtt_flag = True
         timer_ntp_flag = True
@@ -209,11 +209,14 @@ while True:
         #updating hardware
         if timer_hardware_flag:
             timer_hardware_flag = False
-            day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
-            update_hardware(day_flag)
+            try:
+                day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
+                update_hardware(day_flag)
 
-            h,m,s = timing.get_time()
-            print('%02i:%02i:%02i - %s' % (h, m, s, ('DAY TIME' if day_flag else 'NIGHT TIME')))
+                h,m,s = timing.get_time()
+                print('%02i:%02i:%02i - %s' % (h, m, s, ('DAY TIME' if day_flag else 'NIGHT TIME')))
+            except Exception as e:
+                print('[ERR] Hardware update failed:',e)
 
         #reading the sensor
         if timer_sensor_flag:
@@ -236,19 +239,28 @@ while True:
         #garbage collector
         if timer_gc_flag:
             timer_gc_flag = False
-            gc.collect()
-            gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+            try:
+                gc.collect()
+                gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+            except Exception as e:
+                print('[ERR] Garbage collector failed:',e)
+
 
         #memory info
         if timer_meminfo_flag:
             timer_meminfo_flag = False
-            micropython.mem_info()
+            try:
+                micropython.mem_info()
+            except Exception as e:
+                print('[ERR] Memory info failed:',e)
 
     except Exception as e:
-        print(e)
+        print('[ERR] Unhandled exception inside main loop:',e)
+
+    utime.sleep_ms(1) #for background tasks to run
 
 #unhandled error occured - rebooting
-print('Gone outside of main loop!')
+print('[ERR] Gone outside of main loop!')
 esp_reboot()
 
 print('### Quitting main.py ###')
