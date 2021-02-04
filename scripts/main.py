@@ -4,7 +4,7 @@ import gc
 from umqtt.simple import MQTTClient
 import config, timing, BSP
 gc.collect()
-import network, machine, ubinascii, utime, micropython
+import network, machine, ubinascii, utime, micropython, socket
 gc.collect()
 
 
@@ -105,19 +105,18 @@ def mqtt_publish(temperature, humidity):
 
     if server and channel_id and key:
         try:
-            client = MQTTClient(aux_generate_id(), server)
             topic = "channels/" + channel_id + "/publish/" + key
             payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
-            
+
+            client = MQTTClient(aux_generate_id(), server)
             client.connect()
             client.publish(topic, payload)
+            client.disconnect()
             print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
             result = 0
         except Exception as e:
             print('[ERR] MQTT publish failed:',e)
             result = 2
-        finally:
-            client.disconnect()
     else:
         print('Missing MQTT config, sending data skipped')
         result = 1
@@ -228,7 +227,13 @@ while True:
         if timer_mqtt_flag:
             timer_mqtt_flag = False
             temp, hum = BSP.sensor_get_average()
-            mqtt_publish(temp, hum)
+            err = mqtt_publish(temp, hum)
+
+            #in case of error, reconnect to WiFi (shitty router crashes from time to time...)
+            if err == 2:
+                wifi_disconnect()
+                utime.sleep_ms(1000)
+                wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
 
         #time synchronization
         if timer_ntp_flag:

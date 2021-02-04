@@ -18,6 +18,13 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 * universal I2C bus (*currently not supported by firmware*)
 * 0-3.3V analog input (*currently not supported by firmware*) 
 
+### Changelog
+
+#### v1.0
+
+- finished main application
+- added install and config instructions
+
 ### Installation
 1. Open command line and go to `utils/esptool-master`
 2. Install Micropython interpreter (read COM port number in Device Manager)
