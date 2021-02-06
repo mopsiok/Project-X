@@ -12,17 +12,17 @@ Micropython project for GPIO control and atmospheric measurements over WiFi netw
 
 ### Hardware
 ESP8266 NodeMCU v3 and dedicated PCB supporting:
-* 4 PWM outputs, 0-12V
-* 1 relay output
+* 4x PWM outputs, 12V/3A
+* 1x relay output, 250VAC/8A
 * DHT21 temperature and humidity sensor
 * universal I2C bus (*currently not supported by firmware*)
-* 0-3.3V analog input (*currently not supported by firmware*) 
+* 3.3V analog input (*currently not supported by firmware*) 
 
 ### Changelog
 
 #### v1.1
 
-- auto-reboot after multiple sonsecutive MQTT errors
+- auto-reboot after multiple consecutive MQTT errors
 - fixed local time in case of NTP synchronization error after reboot
 - added simplified summertime detection
 
