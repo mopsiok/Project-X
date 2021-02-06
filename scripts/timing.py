@@ -14,6 +14,12 @@ gc.collect()
 # main features
 # -------------------------------------------------------------------
 
+#set local time with predefined values
+#this function should be executed on startup if NTP synchronization fails
+def set_time(year, month, day, hour, minute, second):
+    machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+
+
 # synchronize local time with NTP server
 # this function should be executed once in a couple of minutes
 #   returns:    0 if completed, 1 otherwise
@@ -25,7 +31,7 @@ def ntp_synchronize():
             t += extra_hour
         
         year, month, day, hour, minute, second = utime.localtime(t)[:6]
-        machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+        set_time(year, month, day, hour, minute, second)
         return 0
     except Exception as e:
         print('[ERR] NTP synchronization failed:',e)

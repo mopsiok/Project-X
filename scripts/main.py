@@ -194,7 +194,11 @@ ip = network_info[0]
 
 #getting time
 err = timing.ntp_synchronize()
-print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
+if err == 0:
+    print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
+else:
+    timing.set_time(2021, 1, 1, 12, 0, 0)
+    print("Local time set to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
 
 #initialize hardware
 BSP.init_all()
