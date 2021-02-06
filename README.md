@@ -20,6 +20,12 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ### Changelog
 
+#### v1.1
+
+- auto-reboot after multiple sonsecutive MQTT errors
+- fixed local time in case of NTP synchronization error after reboot
+- added simplified summertime detection
+
 #### v1.0
 
 - finished main application
