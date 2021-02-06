@@ -1,0 +1,296 @@
+Terminal log file
+Date: 04.02.2021 - 12:04:59
+-----------------------------------------------
+12:05:00 - DAY TIME
+12:05:01 - DAY TIME
+12:05:02 - DAY TIME
+Sensor: 24.8*C, 39.5%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:05:03 - DAY TIME
+12:05:04 - DAY TIME
+12:05:05 - DAY TIME
+12:05:06 - DAY TIME
+12:05:07 - DAY TIME
+Sensor: 24.8*C, 39.5%
+12:05:08 - DAY TIME
+12:05:09 - DAY TIME
+12:05:10 - DAY TIME
+12:05:11 - DAY TIME
+12:05:12 - DAY TIME
+Sensor: 24.8*C, 39.9%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:05:13 - DAY TIME
+12:05:14 - DAY TIME
+12:05:15 - DAY TIME
+12:05:16 - DAY TIME
+12:05:17 - DAY TIME
+Sensor: 24.8*C, 39.6%
+12:05:18 - DAY TIME
+12:05:19 - DAY TIME
+12:05:20 - DAY TIME
+12:05:21 - DAY TIME
+12:05:22 - DAY TIME
+Sensor: 24.8*C, 39.3%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:05:23 - DAY TIME
+12:05:24 - DAY TIME
+12:05:25 - DAY TIME
+12:05:26 - DAY TIME
+12:05:27 - DAY TIME
+Sensor: 24.8*C, 41.1%
+12:05:28 - DAY TIME
+12:05:29 - DAY TIME
+12:05:30 - DAY TIME
+12:05:31 - DAY TIME
+12:05:32 - DAY TIME
+Sensor: 24.8*C, 41.5%
+[ERR] MQTT publish failed: -2
+[ERR] Unhandled exception inside main loop: local variable referenced before assignment
+12:05:38 - DAY TIME
+Sensor: 24.8*C, 41.4%
+[ERR] NTP synchronization failed: -2
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:05:45 - DAY TIME
+Sensor: 24.8*C, 40.4%
+12:05:46 - DAY TIME
+12:05:47 - DAY TIME
+Sensor: 24.8*C, 39.7%
+12:05:48 - DAY TIME
+12:05:49 - DAY TIME
+12:05:50 - DAY TIME
+12:05:51 - DAY TIME
+12:05:52 - DAY TIME
+Sensor: 24.7*C, 39.6%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:05:53 - DAY TIME
+12:05:54 - DAY TIME
+12:05:55 - DAY TIME
+12:05:56 - DAY TIME
+12:05:57 - DAY TIME
+Sensor: 24.7*C, 39.2%
+12:05:58 - DAY TIME
+12:05:59 - DAY TIME
+12:06:00 - DAY TIME
+12:06:01 - DAY TIME
+12:06:02 - DAY TIME
+Sensor: 24.7*C, 39.1%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:06:03 - DAY TIME
+12:06:04 - DAY TIME
+12:06:05 - DAY TIME
+12:06:06 - DAY TIME
+12:06:07 - DAY TIME
+Sensor: 24.7*C, 38.9%
+12:06:08 - DAY TIME
+12:06:09 - DAY TIME
+12:06:10 - DAY TIME
+12:06:11 - DAY TIME
+12:06:12 - DAY TIME
+Sensor: 24.7*C, 38.9%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:06:13 - DAY TIME
+12:06:14 - DAY TIME
+12:06:15 - DAY TIME
+12:06:16 - DAY TIME
+12:06:17 - DAY TIME
+Sensor: 24.7*C, 38.9%
+12:06:18 - DAY TIME
+12:06:19 - DAY TIME
+12:06:20 - DAY TIME
+12:06:21 - DAY TIME
+12:06:22 - DAY TIME
+Sensor: 24.7*C, 40.8%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:06:23 - DAY TIME
+12:06:24 - DAY TIME
+12:06:25 - DAY TIME
+12:06:26 - DAY TIME
+12:06:27 - DAY TIME
+Sensor: 24.7*C, 40.6%
+12:06:28 - DAY TIME
+12:06:29 - DAY TIME
+12:06:30 - DAY TIME
+12:06:31 - DAY TIME
+12:06:32 - DAY TIME
+Sensor: 24.7*C, 40.0%
+[ERR] MQTT publish failed: -2
+[ERR] Unhandled exception inside main loop: local variable referenced before assignment
+12:06:38 - DAY TIME
+Sensor: 24.7*C, 39.4%
+[ERR] NTP synchronization failed: -2
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:06:45 - DAY TIME
+Sensor: 24.7*C, 39.1%
+12:06:46 - DAY TIME
+12:06:47 - DAY TIME
+Sensor: 24.6*C, 38.8%
+12:06:48 - DAY TIME
+12:06:49 - DAY TIME
+12:06:50 - DAY TIME
+12:06:51 - DAY TIME
+12:06:52 - DAY TIME
+Sensor: 24.6*C, 38.8%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:06:53 - DAY TIME
+12:06:54 - DAY TIME
+12:06:55 - DAY TIME
+12:06:56 - DAY TIME
+12:06:57 - DAY TIME
+Sensor: 24.6*C, 38.7%
+12:06:58 - DAY TIME
+12:06:59 - DAY TIME
+12:07:00 - DAY TIME
+12:07:01 - DAY TIME
+12:07:02 - DAY TIME
+Sensor: 24.6*C, 38.6%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:07:03 - DAY TIME
+12:07:04 - DAY TIME
+12:07:05 - DAY TIME
+12:07:06 - DAY TIME
+12:07:07 - DAY TIME
+Sensor: 24.6*C, 38.6%
+12:07:08 - DAY TIME
+12:07:09 - DAY TIME
+12:07:10 - DAY TIME
+12:07:11 - DAY TIME
+12:07:12 - DAY TIME
+Sensor: 24.6*C, 38.6%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:07:13 - DAY TIME
+12:07:14 - DAY TIME
+12:07:15 - DAY TIME
+12:07:16 - DAY TIME
+12:07:17 - DAY TIME
+Sensor: 24.6*C, 38.6%
+12:07:18 - DAY TIME
+12:07:19 - DAY TIME
+12:07:20 - DAY TIME
+12:07:21 - DAY TIME
+12:07:22 - DAY TIME
+Sensor: 24.6*C, 38.5%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:07:23 - DAY TIME
+12:07:24 - DAY TIME
+12:07:25 - DAY TIME
+12:07:26 - DAY TIME
+12:07:27 - DAY TIME
+Sensor: 24.6*C, 38.5%
+12:07:28 - DAY TIME
+12:07:29 - DAY TIME
+12:07:30 - DAY TIME
+12:07:31 - DAY TIME
+12:07:32 - DAY TIME
+Sensor: 24.6*C, 38.5%
+[ERR] MQTT publish failed: -2
+[ERR] Unhandled exception inside main loop: local variable referenced before assignment
+12:07:39 - DAY TIME
+Sensor: 24.6*C, 38.4%
+[ERR] NTP synchronization failed: -2
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:07:46 - DAY TIME
+Sensor: 24.6*C, 38.3%
+12:07:46 - DAY TIME
+Sensor: 24.6*C, 38.3%
+12:07:48 - DAY TIME
+12:07:48 - DAY TIME
+12:07:49 - DAY TIME
+12:07:50 - DAY TIME
+12:07:51 - DAY TIME
+Sensor: 24.6*C, 38.3%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:07:52 - DAY TIME
+12:07:53 - DAY TIME
+12:07:54 - DAY TIME
+12:07:55 - DAY TIME
+12:07:56 - DAY TIME
+Sensor: 24.6*C, 38.3%
+12:07:57 - DAY TIME
+12:07:58 - DAY TIME
+12:07:59 - DAY TIME
+12:08:00 - DAY TIME
+12:08:01 - DAY TIME
+Sensor: 24.6*C, 38.3%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:08:02 - DAY TIME
+12:08:03 - DAY TIME
+12:08:04 - DAY TIME
+12:08:05 - DAY TIME
+12:08:06 - DAY TIME
+Sensor: 24.5*C, 38.2%
+12:08:07 - DAY TIME
+12:08:08 - DAY TIME
+12:08:09 - DAY TIME
+12:08:10 - DAY TIME
+12:08:11 - DAY TIME
+Sensor: 24.5*C, 38.3%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:08:12 - DAY TIME
+12:08:13 - DAY TIME
+12:08:14 - DAY TIME
+12:08:15 - DAY TIME
+12:08:16 - DAY TIME
+Sensor: 24.5*C, 38.7%
+12:08:17 - DAY TIME
+12:08:18 - DAY TIME
+12:08:19 - DAY TIME
+12:08:20 - DAY TIME
+12:08:21 - DAY TIME
+Sensor: 24.5*C, 38.9%
+stack: 2048 out of 8192
+GC: total: 36288, used: 24912, free: 11376
+ No. of 1-blocks: 295, 2-blocks: 59, max blk sz: 264, max free sz: 213
+12:08:22 - DAY TIME
+12:08:23 - DAY TIME
+12:08:24 - DAY TIME
+12:08:25 - DAY TIME
+12:08:26 - DAY TIME
+Sensor: 24.5*C, 39.0%
+12:08:27 - DAY TIME
+12:08:28 - DAY TIME
+12:08:29 - DAY TIME
+12:08:30 - DAY TIME
+12:08:31 - DAY TIME
+Sensor: 24.5*C, 38.8%
+[ERR] MQTT publish failed: -2
+[ERR] Unhandled exception inside main loop: local variable referenced before assignment
+12:08:38 - DAY TIME
+Sensor: 24.5*C, 38.7%
+
+-----------------------------------------------
+Date: 04.02.2021 - 12:08:40
+End log file
