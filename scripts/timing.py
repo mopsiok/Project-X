@@ -83,7 +83,9 @@ def get_datetime():
 #   t:          current time in seconds
 #   returns:    True if summertime, False if regular time
 def check_summertime(t):
-    #datetime = utime.localtime(t)
-
-    #TODO
-    return False
+    # not entirely corrent implementation, but it should be enough for everyday's use - one week accuracy
+    month = utime.localtime(t)[1]
+    if month >= 4 and month <= 10:
+        return True
+    else:
+        return False
