@@ -203,6 +203,10 @@ BSP.init_all()
 timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
+#in case of several consecutive MQTT errors and wifi reconnections, the board will reset, trying to fix the connection with shitty router
+mqtt_timeouts = 0
+MQTT_MAX_TIMEOUT_COUNT = 20
+
 while True:
     try:
         #updating hardware
@@ -231,9 +235,17 @@ while True:
 
             #in case of error, reconnect to WiFi (shitty router crashes from time to time...)
             if err == 2:
-                wifi_disconnect()
-                utime.sleep_ms(1000)
-                wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
+                mqtt_timeouts += 1
+                if mqtt_timeouts < MQTT_MAX_TIMEOUT_COUNT:
+                    print('MQTT error %i/%i, trying to reconnect to router...' % (mqtt_timeouts, MQTT_MAX_TIMEOUT_COUNT))
+                    wifi_disconnect()
+                    utime.sleep_ms(1000)
+                    wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
+                else:
+                    print('Maximum number of MQTT errors exceeded.')
+                    esp_reboot()
+            elif err == 0:
+                mqtt_timeouts = 0 #reset the counter if it works again
 
         #time synchronization
         if timer_ntp_flag:
