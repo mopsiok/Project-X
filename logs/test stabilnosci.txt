@@ -1,4 +1,0 @@
-04.02 19:30 - uruchomienie testu
-05.02 06:30 - otwarcie okna, wyłączenie WebREPL
-05.02 16:00 - zamknięcie okna
-06.02 11:00 - testy fixów

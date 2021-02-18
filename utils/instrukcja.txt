@@ -1,20 +1,4 @@
-1. hardware
-	+---------------------+
-	| 1   2               |
-	| 3   4               |
-	| 5   6               |
-	| 7   8               |
-	----------------------+
-	1 - TX0 (debugowy)
-	2 - GND
-	3 - CH_PD (zwarte do VCC; moduł zawsze włączony)
-	4 - TX1 (nadawanie danych do urządzenia docelowego)
-	5 - RST (przycisk do masy; resetowanie urządzenia)
-	6 - GPIO0 (pullup + zworka do GND; domyślnie start z flasha, gdy zwarta to bootloader)
-	7 - VCC
-	8 - RX0 (debugowy)
-
-2. instalacja micropythona
+1. instalacja micropythona
 	- wejść do katalogu esptool
 	- esptool.py --port COM11 erase_flash
 	- założyć zworkę i wcisnąć reset
@@ -23,21 +7,17 @@
 	- po wgraniu softu uruchomić terminal, włączyć port na prędkości 115200, wyciągnąć zworkę i wcisnąć reset 
 	- powinien uruchomić się micropython
 	
-3. instalacja webREPL
+2. instalacja webREPL
 import webrepl_setup => E => qwerty => y
 	
-4. podłączenie do sieci
+3. podłączenie do sieci
 import network
 sta = network.WLAN(network.STA_IF)
 sta.active(True)
-sta.scan()
 sta.connect("UPC865E232", "RM4yvcnxjurh")
-sta.isconnected()
 sta.ifconfig()
 
-5. podmiana danych logowania w pliku boot.py
-
-6. webREPL
+4. webREPL
 - uruchomienie webrepl-master/webrepl.html
 - podanie IP z konfiguracji, connect, podanie hasła
 - wgrywanie pliku boot.py i main.py

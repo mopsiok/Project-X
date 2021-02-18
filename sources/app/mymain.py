@@ -1,13 +1,13 @@
-# This file is executed after boot.py
+# This file is executed after myboot.py
 
 import gc
 from umqtt.simple import MQTTClient
-import config, timing, BSP
+import app.config as config
+import app.timing as timing
+import app.BSP as BSP
 gc.collect()
 import network, machine, ubinascii, utime, micropython, socket
 gc.collect()
-
-
 
 # -------------------------------------------------------------------
 # configuration and magic numbers
@@ -182,7 +182,7 @@ def update_hardware(day_flag):
 # main program
 # -------------------------------------------------------------------  
 
-print('\n\n### Entering main.py ###')
+print('\n\n### Entering Main Application ###')
 
 
 #reading config
@@ -284,4 +284,4 @@ while True:
 print('[ERR] Gone outside of main loop!')
 esp_reboot()
 
-print('### Quitting main.py ###')
+print('\n\n### Quitting Main Application ###')

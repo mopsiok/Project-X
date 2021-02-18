@@ -3,10 +3,8 @@
 import esp, gc, webrepl, network, machine, utime
 from machine import Pin
 
-import config, webserver
-
-esp.osdebug(None) #turn off vendor O/S debugging messages
-webrepl.start()
+import app.config as config
+import app.webserver as webserver
 gc.collect()
 
 
@@ -14,6 +12,9 @@ gc.collect()
 # -------------------------------------------------------------------
 # configuration
 # -------------------------------------------------------------------
+
+WEBREPL_PORT = 8266
+WEBREPL_PASSWORD = 'papryk'
 
 AP_SSID = 'PROJECT_X'
 AP_PASSWORD = 'P4prykowe'
@@ -176,12 +177,15 @@ def server_respond(process_result):
 # main program
 # -------------------------------------------------------------------  
 
-print('\n\n### Entering boot.py ###')
+print('\n\n### Entering Bootloader ###')
 
+#GPIO initialization
 led = Pin(LED_PIN, Pin.OUT)
 button = Pin(BOOT_BUTTON_PIN, Pin.IN, Pin.PULL_UP)
-
 led_off()
+
+#starting webREPL service
+webrepl.start(WEBREPL_PORT,WEBREPL_PASSWORD)
 
 #reading config
 err = config_read()
@@ -190,7 +194,7 @@ if err != 0:
     print('Forcing config mode.')
     config_mode = True
 
-# checking FLASH button for specifying configuration mode
+#checking FLASH button for specifying configuration mode
 if not config_mode:
     for i in range(30):
         utime.sleep_ms(int(BOOT_ENTER_DELAY/30))
@@ -204,7 +208,7 @@ if not config_mode:
             break
 
 if config_mode:
-    # entering config mode
+    #entering config mode
     print('[CONFIG MODE]')
     led_on()
 
@@ -226,4 +230,4 @@ else:
 
 led_off()
 
-print('### Quitting boot.py ###')
+print('\n\n### Quitting Bootloader ###')
