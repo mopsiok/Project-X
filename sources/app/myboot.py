@@ -14,10 +14,10 @@ gc.collect()
 # -------------------------------------------------------------------
 
 WEBREPL_PORT = 8266
-WEBREPL_PASSWORD = 'papryk'
+WEBREPL_PASSWORD = 'projectx'
 
 AP_SSID = 'PROJECT_X'
-AP_PASSWORD = 'P4prykowe'
+AP_PASSWORD = 'projectx'
 
 SERVER_INDEX = 'boot_index.html'
 
@@ -187,12 +187,33 @@ led_off()
 #starting webREPL service
 webrepl.start(WEBREPL_PORT,WEBREPL_PASSWORD)
 
-#reading config
-err = config_read()
+missing_files_flag = False
 config_mode = False
-if err != 0:
-    print('Forcing config mode.')
+
+#checking for configuration file
+try:
+    f = open(config.CONFIG_FILE, "r")
+    f.close()
+except OSError:
+    print('[ERR] Missing configuration file: %s. Forcing config mode.' % config.CONFIG_FILE)
+    missing_files_flag = True
     config_mode = True
+
+#checking for webpage file
+try:
+    f = open(SERVER_INDEX, "r")
+    f.close()
+except OSError:
+    print('[ERR] Missing webpage file: %s. Forcing config mode.' % SERVER_INDEX)
+    missing_files_flag = True
+    config_mode = True
+
+#reading config
+if not missing_files_flag:
+    err = config_read()
+    if err != 0:
+        print('Forcing config mode.')
+        config_mode = True
 
 #checking FLASH button for specifying configuration mode
 if not config_mode:
@@ -216,15 +237,21 @@ if config_mode:
     network_info = access_point_start(AP_SSID, AP_PASSWORD)
     ip = network_info[0]
 
-    #starting config webserver
-    webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
+    #starting config webserver (except for the first run)
+    if not missing_files_flag:
+        webserver.start(ip, 80, SERVER_INDEX, server_process_data, server_respond)
 
-    #server is stopped on user demand or due to error - disabling AP and rebooting
-    print('Stopping Access Point...')
-    utime.sleep_ms(BOOT_CLOSE_DELAY)
-    access_point_stop()
-    utime.sleep_ms(100)
-    esp_reboot()
+        #server is stopped on user demand or due to error - disabling AP and rebooting
+        print('Stopping Access Point...')
+        utime.sleep_ms(BOOT_CLOSE_DELAY)
+        access_point_stop()
+        utime.sleep_ms(100)
+        esp_reboot()
+    else:
+        print('First run configuration in progress - upload necessary files and reset the board.')
+        while True:
+            utime.sleep_ms(100)
+
 else:
     print('[NORMAL MODE]')
 

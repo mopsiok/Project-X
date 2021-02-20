@@ -137,16 +137,17 @@ timer_mqtt_flag = False
 timer_ntp_flag = False
 timer_gc_flag = False
 timer_meminfo_flag = False
+timer_watchdog_flag = False
 def main_timer_callback(tim):
     global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_mqtt_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
     for i in range(len(timer_presc)):
         timer_presc[i] += 1
     
     timer_hardware_flag = True
-    timer_gc_flag = True
 
     if timer_presc[0] >= 5:
         timer_presc[0] = 0
+        timer_gc_flag = True
         timer_sensor_flag = True
 
     if timer_presc[1] >= int(CONFIG['MQTT_PUBLISH_PERIOD']):
@@ -157,6 +158,12 @@ def main_timer_callback(tim):
     if timer_presc[2] >= 10:
         timer_presc[2] = 0
         timer_meminfo_flag = True
+
+
+def watchdog_timer_callback(tim):
+    global timer_watchdog_flag
+    timer_watchdog_flag = True
+
 
 
 # set relay and fans according to current time
@@ -184,7 +191,6 @@ def update_hardware(day_flag):
 
 print('\n\n### Entering Main Application ###')
 
-
 #reading config
 err = config_read()
 
@@ -207,9 +213,16 @@ BSP.init_all()
 timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
+#set up 10Hz watchdog timer
+wdtimer = machine.Timer(-1)
+wdtimer.init(period=100, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)
+
 #in case of several consecutive MQTT errors and wifi reconnections, the board will reset, trying to fix the connection with shitty router
 mqtt_timeouts = 0
 MQTT_MAX_TIMEOUT_COUNT = 20
+
+
+watchdog_low = False
 
 while True:
     try:
@@ -266,7 +279,6 @@ while True:
             except Exception as e:
                 print('[ERR] Garbage collector failed:',e)
 
-
         #memory info
         if timer_meminfo_flag:
             timer_meminfo_flag = False
@@ -274,6 +286,19 @@ while True:
                 micropython.mem_info()
             except Exception as e:
                 print('[ERR] Memory info failed:',e)
+
+        #clearing external watchdog
+        if timer_watchdog_flag:
+            timer_watchdog_flag = False
+            
+            if watchdog_low:
+                BSP.watchdog_low()
+                watchdog_low = False
+            else:
+                BSP.watchdog_high()
+                watchdog_low = True
+
+
 
     except Exception as e:
         print('[ERR] Unhandled exception inside main loop:',e)
