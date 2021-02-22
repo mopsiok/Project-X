@@ -162,7 +162,12 @@ def main_timer_callback(tim):
 
 def watchdog_timer_callback(tim):
     global timer_watchdog_flag
-    timer_watchdog_flag = True
+    if timer_watchdog_flag:
+        BSP.watchdog_high()
+        timer_watchdog_flag = False
+    else:
+        BSP.watchdog_low()
+        timer_watchdog_flag = True
 
 
 
@@ -220,9 +225,6 @@ wdtimer.init(period=100, mode=machine.Timer.PERIODIC, callback=watchdog_timer_ca
 #in case of several consecutive MQTT errors and wifi reconnections, the board will reset, trying to fix the connection with shitty router
 mqtt_timeouts = 0
 MQTT_MAX_TIMEOUT_COUNT = 20
-
-
-watchdog_low = False
 
 while True:
     try:
@@ -286,19 +288,6 @@ while True:
                 micropython.mem_info()
             except Exception as e:
                 print('[ERR] Memory info failed:',e)
-
-        #clearing external watchdog
-        if timer_watchdog_flag:
-            timer_watchdog_flag = False
-            
-            if watchdog_low:
-                BSP.watchdog_low()
-                watchdog_low = False
-            else:
-                BSP.watchdog_high()
-                watchdog_low = True
-
-
 
     except Exception as e:
         print('[ERR] Unhandled exception inside main loop:',e)
