@@ -15,10 +15,14 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 * 4x PWM outputs, 12V/3A
 * 1x relay output, 250VAC/8A
 * DHT21 temperature and humidity sensor
-* universal I2C bus (*currently not supported by firmware*)
 * 3.3V analog input (*currently not supported by firmware*) 
+* hardware watchdog for auto-reset
 
 ### Changelog
+
+#### v2.0
+
+- TO BE UPDATED
 
 #### v1.1
 

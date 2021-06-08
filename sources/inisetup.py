@@ -1,3 +1,7 @@
+# this file is used in precompiled version only
+# it is executed after system startup and is responsible for starting a simple access point to initialize the device
+# then, boot.py is called
+
 import uos
 import network
 from flashbdev import bdev

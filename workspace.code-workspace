@@ -1,0 +1,16 @@
+{
+	"folders": [
+        {
+            "path": "sources"
+        },
+        {
+            "path": "build"
+        },
+        {
+            "path": "outputs"
+        },
+        {
+            "path": "utils"
+        }
+    ]
+}
