@@ -2,6 +2,7 @@
 
 import gc, utime, ntptime, machine
 gc.collect()
+import safety
 
 
 # -------------------------------------------------------------------
@@ -89,7 +90,7 @@ def get_datetime():
 #   t:          current time in seconds
 #   returns:    True if summertime, False if regular time
 def check_summertime(t):
-    # not entirely corrent implementation, but it should be enough for everyday's use - one week accuracy
+    # not entirely correct implementation, but it should be enough for everyday's use - one week accuracy
     month = utime.localtime(t)[1]
     if month >= 4 and month <= 10:
         return True

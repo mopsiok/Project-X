@@ -31,12 +31,6 @@ def aux_generate_id():
     return "%s_%04i" % (aux_get_id(), (utime.ticks_us() % 10000))
 
 
-# reboot the board
-def esp_reboot():
-    print('Rebooting...')
-    machine.reset()
-
-
 # reads config file to global CONFIG and returns error code
 def config_read():
     print('Reading config file.')
@@ -135,7 +129,6 @@ timer_mqtt_flag = False
 timer_ntp_flag = False
 timer_gc_flag = False
 timer_meminfo_flag = False
-timer_watchdog_flag = False
 def main_timer_callback(tim):
     global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_mqtt_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
     for i in range(len(timer_presc)):
@@ -156,17 +149,6 @@ def main_timer_callback(tim):
     if timer_presc[2] >= 10:
         timer_presc[2] = 0
         timer_meminfo_flag = True
-
-
-def watchdog_timer_callback(tim):
-    global timer_watchdog_flag
-    if timer_watchdog_flag:
-        BSP.watchdog_high()
-        timer_watchdog_flag = False
-    else:
-        BSP.watchdog_low()
-        timer_watchdog_flag = True
-
 
 
 # set relay and fans according to current time
@@ -194,6 +176,9 @@ def update_hardware(day_flag):
 
 print('\n\n### Entering Main Application ###')
 
+#initialize watchdog pin toggling
+safety.init_watchdog()
+
 #reading config
 err = config_read()
 
@@ -215,10 +200,6 @@ BSP.init_all()
 #set up a 1Hz timer for main application
 timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
-
-#set up 10Hz watchdog timer
-wdtimer = machine.Timer(-1)
-wdtimer.init(period=100, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)
 
 #in case of several consecutive MQTT errors and wifi reconnections, the board will reset, trying to fix the connection with shitty router
 mqtt_timeouts = 0
@@ -260,7 +241,7 @@ while True:
                     wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
                 else:
                     print('Maximum number of MQTT errors exceeded.')
-                    esp_reboot()
+                    safety.reboot()
             elif err == 0:
                 mqtt_timeouts = 0 #reset the counter if it works again
 
@@ -294,6 +275,6 @@ while True:
 
 #unhandled error occured - rebooting
 print('[ERR] Gone outside of main loop!')
-esp_reboot()
+safety.reboot()
 
 print('\n\n### Quitting Main Application ###')

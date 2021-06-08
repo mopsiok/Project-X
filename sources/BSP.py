@@ -12,18 +12,13 @@ SENSOR_AVERAGE_SAMPLES = 10
 # gpio definitions
 RELAY_PIN = 5           # light relay
 SENSOR_PIN = 4          # DHT sensor
-PWM_PINS = [0,2,14,15]  # PWM for fans 1..4
-SCL_PIN = 12            # aux I2C clock
-SDA_PIN = 13            # aux I2C data
+PWM_PINS = [0,2,12,13]  # PWM for fans 1..4
 
 # list of PWM objects to control fan outputs
 fans = []
 
 # Pin object to control relay
 relay = None
-
-#Pin object to clear external watchdog
-watchdog = None
 
 #DHT21 sensor object, and moving-average of temperature (*C) and humidity (%)
 sensor = None
@@ -39,7 +34,7 @@ sensor_first_measure = True
 
 # initialize hardware
 def init_all():
-    global relay, watchdog
+    global relay
     
     init_fans()
     for i in range(4):
@@ -50,8 +45,7 @@ def init_all():
     relay = machine.Pin(RELAY_PIN, machine.Pin.OUT)
     relay_off()
 
-    watchdog = machine.Pin(SDA_PIN, machine.Pin.OUT)
-    watchdog_low()
+
 
 
 # deactivate relay's coil
@@ -66,16 +60,6 @@ def relay_on():
     global relay
     if relay:
         relay.on()
-
-def watchdog_high():
-    global watchdog
-    if watchdog:
-        watchdog.on()
-        
-def watchdog_low():
-    global watchdog
-    if watchdog:
-        watchdog.off()
 
 
 # set single fan output to required duty cycle

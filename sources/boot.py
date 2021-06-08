@@ -58,12 +58,6 @@ def led_off():
     led.on()
 
 
-# reboot the board
-def esp_reboot():
-    print('Rebooting...')
-    machine.reset()
-
-
 # reads config file to global CONFIG and returns error code
 def config_read():
     print('Reading config file.')
@@ -178,6 +172,9 @@ def server_respond(process_result):
 
 print('\n\n### Entering Bootloader ###')
 
+#initialize watchdog pin toggling
+safety.init_watchdog()
+
 #GPIO initialization
 led = Pin(LED_PIN, Pin.OUT)
 button = Pin(BOOT_BUTTON_PIN, Pin.IN, Pin.PULL_UP)
@@ -245,7 +242,7 @@ if config_mode:
         utime.sleep_ms(BOOT_CLOSE_DELAY)
         access_point_stop()
         utime.sleep_ms(100)
-        esp_reboot()
+        safety.reboot()
     else:
         print('First run configuration in progress - upload necessary files and reset the board.')
         while True:
@@ -255,5 +252,7 @@ else:
     print('[NORMAL MODE]')
 
 led_off()
+
+safety.deinit_watchdog()
 
 print('\n\n### Quitting Bootloader ###')
