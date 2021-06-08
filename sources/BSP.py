@@ -36,7 +36,7 @@ sensor_first_measure = True
 def init_all():
     global relay
     
-    init_fans()
+    #init_fans()
     for i in range(4):
         fan_set(i, 0)
 
@@ -67,7 +67,7 @@ def relay_on():
 # value:    0..100, duty cycle in %
 def fan_set(fan, value):
     global fans
-    if fans and fan < 4:
+    if fans and fan < 4 and fans[fan]:
         fans[fan].duty((value * 1024) // 100)
 
 
