@@ -27,32 +27,32 @@ watchdog_timer = None
 # -------------------------------------------------------------------
 
 # callback executed by watchdog timer
-# toggle_flag = False
-# toggle_counter = 0
-# def watchdog_timer_callback(tim):
-#     global watchdog, toggle_flag, toggle_counter
-#     toggle_counter += 1
-#     if (toggle_counter >= int(WATCHDOG_TOGGLE_PERIOD/WATCHDOG_TIMER_PERIOD)) and (watchdog != None):
-#         toggle_counter = 0
-#         if toggle_flag:
-#             watchdog.on()
-#         else:
-#             watchdog.off()
-#         toggle_flag = not toggle_flag
-#     # if watchdog:
-#     #     watchdog.value(not watchdog.value())
+toggle_flag = False
+toggle_counter = 0
+def watchdog_timer_callback(tim):
+    global watchdog, toggle_flag, toggle_counter
+    toggle_counter += 1
+    if (toggle_counter >= int(WATCHDOG_TOGGLE_PERIOD/WATCHDOG_TIMER_PERIOD)) and (watchdog != None):
+        toggle_counter = 0
+        if toggle_flag:
+            watchdog.on()
+        else:
+            watchdog.off()
+        toggle_flag = not toggle_flag
+    # if watchdog:
+    #     watchdog.value(not watchdog.value())
 
 
 # initialize watchdog pin and start a timer
 def init_watchdog():
     global watchdog, watchdog_timer
-    watchdog = machine.PWM(machine.Pin(WATCHDOG_PIN), freq=4)
-    watchdog.duty(512)
-    # watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT)
-    # watchdog.off()
+    # watchdog = machine.PWM(machine.Pin(WATCHDOG_PIN), freq=4)
+    # watchdog.duty(512)
+    watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT)
+    watchdog.off()
 
-    # watchdog_timer = machine.Timer(-1)
-    # watchdog_timer.init(period=WATCHDOG_TIMER_PERIOD, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)
+    watchdog_timer = machine.Timer(-1)
+    watchdog_timer.init(period=WATCHDOG_TIMER_PERIOD, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)
 
 
 # deinitialize watchdog timer
