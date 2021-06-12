@@ -6,8 +6,9 @@ import machine
 # configuration and magic numbers
 # -------------------------------------------------------------------
 
-WATCHDOG_TIMER_PERIOD = 10          # virtual timer period in ms
-WATCHDOG_PERIODS_PER_TOGGLE = 10   # virtual timer periods that cause single watchdog pin toggle
+WATCHDOG_TIMER_PERIOD = 10                      # virtual timer period in ms
+WATCHDOG_TIMER_PERIODS_PER_ACTIVE_STATE = 10    #virtual timer periods that corresponds to active state duration
+WATCHDOG_TIMER_PERIODS_PER_CLEAR = 190          # virtual timer periods that corresponds to single clear sequence duration
 
 # GPIO definitions
 WATCHDOG_PIN = 14               # hardware watchdog reset pin
@@ -27,19 +28,21 @@ watchdog_timer = None
 # -------------------------------------------------------------------
 
 # callback executed by watchdog timer
-toggle_counter = 0
+period_counter = 0
 def watchdog_timer_callback(tim):
-    global watchdog, toggle_counter
-    toggle_counter += 1
-    if (toggle_counter >= WATCHDOG_PERIODS_PER_TOGGLE) and (watchdog != None):
-        toggle_counter = 0
-        watchdog.value(not watchdog.value())
+    global watchdog, period_counter
+    period_counter += 1
+    if period_counter == WATCHDOG_TIMER_PERIODS_PER_ACTIVE_STATE:
+        watchdog.on()
+    elif period_counter >= WATCHDOG_TIMER_PERIODS_PER_CLEAR:
+        period_counter = 0
+        watchdog.off()
 
 
 # initialize watchdog pin and start a timer
 def init_watchdog():
     global watchdog, watchdog_timer
-    watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT, value=True)
+    watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT, value=False)
 
     watchdog_timer = machine.Timer(-1)
     watchdog_timer.init(period=WATCHDOG_TIMER_PERIOD, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)

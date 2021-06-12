@@ -33,7 +33,7 @@ CONFIG = {}
 # -------------------------------------------------------------------
 
 BOOT_BUTTON_PIN = 0 # boot button gpio (flash pin)
-BOOT_ENTER_DELAY = 1000 # waiting period before checking button status (in ms)
+BOOT_ENTER_DELAY = 2500 # waiting period before checking button status (in ms)
 BOOT_CLOSE_DELAY = 2000 # waiting period for finishing connection after AP stop request (in ms)
 
 LED_PIN = 2 # status led gpio pin
@@ -255,5 +255,6 @@ else:
 led_off()
 
 safety.deinit_watchdog()
+gc.collect()
 
 print('\n\n### Quitting Bootloader ###')
