@@ -36,7 +36,7 @@ sensor_first_measure = True
 def init_all():
     global relay
     
-    #init_fans()
+    init_fans()
     for i in range(4):
         fan_set(i, 0)
 
