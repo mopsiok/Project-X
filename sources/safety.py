@@ -63,7 +63,7 @@ def init_watchdog(clear_periods = DEFAULT_WATCHDOG_TIMER_PERIODS_PER_CLEAR):
 # reboot the board after setting important pins to default states
 def reboot():
     print('Performing safe reboot...')
-    machine.Pin(GPIO0_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
-    machine.Pin(GPIO2_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
-    machine.Pin(GPIO15_PIN, machine.Pin.IN, machine.Pin.PULL_DOWN)
+    machine.Pin(GPIO0_PIN, machine.Pin.OUT, value=1)
+    machine.Pin(GPIO2_PIN, machine.Pin.OUT, value=1)
+    machine.Pin(GPIO15_PIN, machine.Pin.OUT, value=0)
     machine.reset()
