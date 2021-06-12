@@ -6,8 +6,8 @@ import machine
 # configuration and magic numbers
 # -------------------------------------------------------------------
 
-WATCHDOG_TOGGLE_PERIOD = 100    # watchdog pin toggle period in ms
-WATCHDOG_TIMER_PERIOD = 10      # virtual timer period in ms
+WATCHDOG_TIMER_PERIOD = 10          # virtual timer period in ms
+WATCHDOG_PERIODS_PER_TOGGLE = 10   # virtual timer periods that cause single watchdog pin toggle
 
 # GPIO definitions
 WATCHDOG_PIN = 14               # hardware watchdog reset pin
@@ -27,29 +27,19 @@ watchdog_timer = None
 # -------------------------------------------------------------------
 
 # callback executed by watchdog timer
-toggle_flag = False
 toggle_counter = 0
 def watchdog_timer_callback(tim):
-    global watchdog, toggle_flag, toggle_counter
+    global watchdog, toggle_counter
     toggle_counter += 1
-    if (toggle_counter >= int(WATCHDOG_TOGGLE_PERIOD/WATCHDOG_TIMER_PERIOD)) and (watchdog != None):
+    if (toggle_counter >= WATCHDOG_PERIODS_PER_TOGGLE) and (watchdog != None):
         toggle_counter = 0
-        if toggle_flag:
-            watchdog.on()
-        else:
-            watchdog.off()
-        toggle_flag = not toggle_flag
-    # if watchdog:
-    #     watchdog.value(not watchdog.value())
+        watchdog.value(not watchdog.value())
 
 
 # initialize watchdog pin and start a timer
 def init_watchdog():
     global watchdog, watchdog_timer
-    # watchdog = machine.PWM(machine.Pin(WATCHDOG_PIN), freq=4)
-    # watchdog.duty(512)
-    watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT)
-    watchdog.off()
+    watchdog = machine.Pin(WATCHDOG_PIN, machine.Pin.OUT, value=True)
 
     watchdog_timer = machine.Timer(-1)
     watchdog_timer.init(period=WATCHDOG_TIMER_PERIOD, mode=machine.Timer.PERIODIC, callback=watchdog_timer_callback)
@@ -57,9 +47,10 @@ def init_watchdog():
 
 # deinitialize watchdog timer
 def deinit_watchdog():
-    global watchdog
-    if watchdog:
-        watchdog.deinit()
+    pass
+    # global watchdog_timer
+    # if watchdog_timer:
+    #     watchdog_timer.deinit()
 
 
 # -------------------------------------------------------------------

@@ -1,9 +1,13 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 
+#initialize watchdog pin toggling
+import safety
+safety.init_watchdog()
+
 import esp, gc, webrepl, network, machine, utime
 from machine import Pin
 
-import safety, config, webserver
+import config, webserver
 gc.collect()
 
 
@@ -171,9 +175,6 @@ def server_respond(process_result):
 # -------------------------------------------------------------------  
 
 print('\n\n### Entering Bootloader ###')
-
-#initialize watchdog pin toggling
-safety.init_watchdog()
 
 #GPIO initialization
 led = Pin(LED_PIN, Pin.OUT)

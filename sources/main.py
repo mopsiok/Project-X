@@ -1,8 +1,12 @@
 # This file is executed after boot.py
 
+#initialize watchdog pin toggling
+import safety
+#safety.init_watchdog()
+
 import gc
 from umqtt.simple import MQTTClient
-import safety, config, BSP, timing
+import config, BSP, timing
 gc.collect()
 import network, machine, ubinascii, utime, micropython, socket
 gc.collect()
@@ -154,6 +158,7 @@ def main_timer_callback(tim):
 # set relay and fans according to current time
 # day_flag: True = day; False - night
 def update_hardware(day_flag):
+    # TODO add last flag to execute it on change only
     if day_flag:
         BSP.relay_on()
         BSP.fan_set(0, int(CONFIG['PWM1_DAY']))
@@ -175,9 +180,6 @@ def update_hardware(day_flag):
 # -------------------------------------------------------------------  
 
 print('\n\n### Entering Main Application ###')
-
-#initialize watchdog pin toggling
-safety.init_watchdog()
 
 #reading config
 err = config_read()
