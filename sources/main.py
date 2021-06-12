@@ -2,7 +2,7 @@
 
 #initialize watchdog pin toggling
 import safety
-#safety.init_watchdog()
+safety.init_watchdog()
 
 import gc
 from umqtt.simple import MQTTClient
