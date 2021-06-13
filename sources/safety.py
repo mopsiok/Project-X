@@ -8,10 +8,10 @@ import machine
 
 WATCHDOG_TIMER_PERIOD = 10                      # virtual timer period in ms
 WATCHDOG_TIMER_PERIODS_PER_ACTIVE_STATE = 10    # virtual timer periods that corresponds to active state duration
-DEFAULT_WATCHDOG_TIMER_PERIODS_PER_CLEAR = 150  # virtual timer periods that corresponds to single clear sequence duration (in main program)
+DEFAULT_WATCHDOG_TIMER_PERIODS_PER_CLEAR = 130  # virtual timer periods that corresponds to single clear sequence duration (in main program)
 BOOT_WATCHDOG_TIMER_PERIODS_PER_CLEAR = 50     # virtual timer periods that corresponds to single clear sequence duration (in boot, faster because of delay while loading scripts)
-# 1.5s in normal mode, should be 2.25s (150%) when malfunction occurs
-# after testing => 1.9s always generates reset, so it should be more than ok 
+# 1.3s in normal mode, should be 1.95s (150%) when malfunction occurs
+# after testing => 1.9s always generates reset, so it should be more than ok
 
 # GPIO definitions
 WATCHDOG_PIN = 14               # hardware watchdog reset pin
