@@ -1,0 +1,56 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Rebuild app",
+            "type": "shell",
+            "command": "scripts/rebuild.sh",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "panel": "shared"
+                //TODO check
+            }
+        },
+        {
+            "label": "Flash",
+            "type": "shell",
+            "command": "scripts/flash.sh ${input:comPort}",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "panel": "shared"
+                //TODO check
+            }
+        },
+    ],
+    "inputs": [
+        // {
+        //     "type": "pickString",
+        //     "id": "test",
+        //     "description": "choose one:",
+        //     "options": [
+        //         "a",
+        //         "b",
+        //         "c",
+        //     ],
+        //     "default": "a"
+        // },
+        {
+            "type": "promptString",
+            "id": "comPort",
+            "description": "Serial port name:",
+            "default": "/dev/ttyUSB0"
+        }
+    ]
+}
