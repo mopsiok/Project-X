@@ -61,7 +61,7 @@ def config_write():
 # timeout:  int, maximum timeout in ms
 # returns:  error code (0 = connected; 1 = missing credentials; 2 = timeout) and configuration info
 def wifi_connect(ssid, password, timeout=10000):
-    print('Connecting to WiFi (%s,%s)...' % (ssid, password))
+    print('Connecting to WiFi (%s)...' % (ssid,))
     sta = network.WLAN(network.STA_IF)
     if (not ssid) or (not password):
         sta.active(False)

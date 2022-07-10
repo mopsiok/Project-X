@@ -3,7 +3,7 @@
 #changes:
 # - changed make execution according to official readme
 
-export PATH=/home/mopsiok/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
+export PATH=~/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
 cd ~/
 git clone https://github.com/micropython/micropython.git
 cd micropython

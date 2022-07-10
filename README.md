@@ -20,6 +20,10 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ## Changelog
 
+### under development
+
+- remote development improvements (added scripts and VSCode tasks)
+
 ### v2.0
 
 - added watchdog support
@@ -37,113 +41,129 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 - finished main application
 - added install and config instructions
 
-## Installation
-1. Install esptool:
+## Environmental setup
 
-```cmd
-python -m pip install esptool
+As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe one way of doing it.
+
+1. Install any linux distribution (Ubuntu 20.04.2 LTS on a virtual machine is used in this example)
+2. Pull the repo on the development machine
+3. Prepare the environment - modify the scripts if needed
+    - Install ESP open SDK:
+        ```bash
+        ./scripts/setup_sdk.sh
+        ```
+    - Install newest version of micropython (v1.14 is used in this example):
+        ```bash
+        ./scripts/setup_micropython.sh
+        ```
+    - Install esptool for flashing the device
+        ```bash
+        python3 -m pip install esptool
+        ```
+
+## Building the project
+
+You can use predefined VS code task (`.vscode/tasks.json`) to run "Rebuild app" task, or do it manually:
+```bash
+./scripts/rebuild.sh
 ```
+After the build is finished, output binary file is copied to `binaries` directory. I use another location for synchronizing the build with my main machine, so you may need to adjust or remove it.
 
-2. Open the watchdog jumper (JU1 on the board)
-3. Flash the board with current version of the firmware (read COM port number in Device Manager):
+## Flashing
 
-```cmd
-cd binaries
-python -m esptool --port COMx erase_flash
-python -m esptool --port COMx --baud 115200 write_flash --flash_size=detect 0 filename.bin
-```
+1. Flash the board with last version of the firmware using predefined VS code task ("Flash") or manually:
+    ```bash
+    ./scripts/flash.sh /dev/ttyUSBxx
+    ```
 
-4. Open COM port in terminal (baudrate 115200) and reset the board using RST button on the ESP module. It should receive:
-```
-### Entering Bootloader ###
-WebREPL daemon started on ws://192.168.4.1:8266
-Started webrepl in manual override mode
-[ERR] Missing configuration file: boot.conf. Forcing config mode.
-[ERR] Missing webpage file: boot_index.html. Forcing config mode.
-[CONFIG MODE]
-Access Point started (PROJECT_X,projectx)
-Network info: ('192.168.4.1', '255.255.255.0', '192.168.4.1', '208.67.222.222')
-First run configuration in progress - upload necessary files and reset the board.
-```
+    *Note: **When the board keeps reseting, open the watchdog jumper (JU1 on the board).** Remember to close it again after flashing is done, to ensure proper operation of watchdog and external reset pushbutton. Red LED indicates watchdog clear signal, it should blink in order to stop the watchdog from resetting the board.*
 
-5. Close the watchdog jumper (JU1). From now on, watchdog and external pushbutton can reset the board. Red LED indicates watchdog clear signal, it should blink in order to stop the watchdog from resetting the board.
-6. Connect a computer/smartphone to the WiFi created by the device:
-   
-```
-SSID: PROJECT_X
-PASS: projectx
-```
+2. Open serial port in your favourite client (115200 baudrate), re-connect the board and reset it one more time to observe the result:
+    ```
+    ### Entering Bootloader ###
+    WebREPL daemon started on ws://192.168.4.1:8266
+    Started webrepl in manual override mode
+    [ERR] Missing configuration file: boot.conf. Forcing config mode.
+    [ERR] Missing webpage file: boot_index.html. Forcing config mode.
+    [CONFIG MODE]
+    Access Point started (PROJECT_X,projectx)
+    Network info: ('192.168.4.1', '255.255.255.0', '192.168.4.1', '208.67.222.222')
+    First run configuration in progress - upload necessary files and reset the board.
+    ```
 
-7. Open webREPL page (`utils\webrepl-master\webrepl.html`) and connect to the device:
+## Initial configuration
 
-```
-HOST: ws://192.168.4.1:8266/
-PASS: projectx
-```
+1. Connect to the WiFi created by the device:
+    ```
+    SSID: PROJECT_X
+    PASS: projectx
+    ```
+2. Open webREPL page (`utils/webrepl-master/webrepl.html`) and connect to the device:
+    ```
+    HOST: ws://192.168.4.1:8266/
+    PASS: projectx
+    ```
+3. Send main index file (`sources/boot_index.html`)
+4. Send device configuration file (`sources/boot.conf`)
 
-8. Send main index file (`boot_index.html` from sources directory)
-9. Send device configuration file (`boot.conf` from sources directory)
-    *Note: You can manually edit the file, providing your local WiFi credentials and MQTT server login data. Then, you won't need to configure the device as described in the next section.*
-10. Disconnect from the device.
-11. Reset the board.
-    ***Note: First connection to your local WiFi can take longer time, which could result in watchdog delay and cause the board to reset. If you see in the terminal that the board keeps rebooting, then you need to open the watchdog jumper (JU1) for the initial start-up. When the device saves the data, close the jumper again.***
-12. From now on, the board is fully operational. When you look at the terminal, it should receive:
+    *Note: You can manually edit the file, providing your local WiFi credentials and MQTT server data. **Then, you won't need to configure the device as described in the next section.***
 
-```
-### Entering Bootloader ###
-WebREPL daemon started on ws://0.0.0.0:8266
-Started webrepl in manual override mode
-Reading config file.
-{'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
-[NORMAL MODE]
+5. Disconnect from the device.
+6. Reset the board using module RST button or the external one.
 
+    *Note: First connection to your local WiFi can take longer time, **which could result in watchdog delay and cause the board to reset**. If you see in the terminal that the board keeps rebooting, then you need to open the watchdog jumper (JU1) for the initial start-up. When the device saves the data, close the jumper again.*
 
-### Quitting Bootloader ###
+7. From now on, the board is fully operational. When you look at the terminal, it should receive:
+    ```
+    ### Entering Bootloader ###
+    WebREPL daemon started on ws://0.0.0.0:8266
+    Started webrepl in manual override mode
+    Reading config file.
+    {'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
+    [NORMAL MODE]
 
 
-### Entering Main Application ###
-Reading config file.
-{'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
-Connecting to WiFi (x,x)...
-Connected: ('192.168.0.80', '255.255.255.0', '192.168.0.1', '192.168.0.1')
-Synchronized to 2021.06.13 12:29:17
-12:29:18 - DAY TIME
-12:29:19 - DAY TIME
-12:29:20 - DAY TIME
-12:29:21 - DAY TIME
-```
+    ### Quitting Bootloader ###
 
-## Configuration
-1. Reboot the board using RST button on ESP module, or external reset button.
-2. While the blue LED is blinking, push the configuration button (FLASH button on ESP module, or external CONFIG button) to enter configuration mode.
+
+    ### Entering Main Application ###
+    Reading config file.
+    {'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
+    Connecting to WiFi (x)...
+    Connected: ('192.168.0.80', '255.255.255.0', '192.168.0.1', '192.168.0.1')
+    Synchronized to 2021.06.13 12:29:17
+    12:29:18 - DAY TIME
+    12:29:19 - DAY TIME
+    12:29:20 - DAY TIME
+    12:29:21 - DAY TIME
+    ```
+
+## Reconfiguring the board using web interface
+1. Reboot the board using RST button on ESP module, or external pushbutton.
+2. While the blue LED is blinking, push the configuration button (external CONFIG button or FLASH button on ESP module) to enter configuration mode.
 3. If you have an active terminal session, you should see:
-
-```
-### Entering Bootloader ###
-WebREPL daemon started on ws://192.168.4.1:8266
-Started webrepl in manual override mode
-Reading config file.
-{'PWM3_DAY': '90', 'PWM1_NIGHT': '40', 'MQTT_SERVER': 'mqtt.thingspeak.com', 'MQTT_CHANNEL_ID': '0', 'LIGHT_ON': '06:00:00', 'MQTT_WRITE_KEY': 'YOURKEY', 'MQTT_PUBLISH_PERIOD': '60', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'WIFI_SSID': 'yourssid', 'WIFI_PASS': 'yourpass', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00'}
-[CONFIG MODE]
-Access Point started (PROJECT_X,projectx)
-Network info: ('192.168.4.1', '255.255.255.0', '192.168.4.1', '208.67.222.222')
-Loading webpage...
-Page loaded, escaped 17 instances of '%s'.
-Webserver started on 192.168.4.1:80
-```
+    ```
+    ### Entering Bootloader ###
+    WebREPL daemon started on ws://192.168.4.1:8266
+    Started webrepl in manual override mode
+    Reading config file.
+    {'PWM3_DAY': '90', 'PWM1_NIGHT': '40', 'MQTT_SERVER': 'mqtt.thingspeak.com', 'MQTT_CHANNEL_ID': '0', 'LIGHT_ON': '06:00:00', 'MQTT_WRITE_KEY': 'YOURKEY', 'MQTT_PUBLISH_PERIOD': '60', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'WIFI_SSID': 'yourssid', 'WIFI_PASS': 'yourpass', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00'}
+    [CONFIG MODE]
+    Access Point started (PROJECT_X,projectx)
+    Network info: ('192.168.4.1', '255.255.255.0', '192.168.4.1', '208.67.222.222')
+    Loading webpage...
+    Page loaded, escaped 17 instances of '%s'.
+    Webserver started on 192.168.4.1:80
+    ```
 
 4. Connect a computer/smartphone to the WiFi created by the device:
-   
-```
-SSID: PROJECT_X
-PASS: projectx
-```
+    ```
+    SSID: PROJECT_X
+    PASS: projectx
+    ```
 
 5. Open the device configuration website: http://192.168.4.1/
-6. Type in required configuration, especially your local WiFi credentials (and Thingspeak data, if you intend to use it).
+6. Type in required configuration, especially your local WiFi credentials.
 7. After pushing Save button, there should be a message confirming that data has been saved. You can now restart te board either by using a web button or by pushing any of the reset buttons.
-    ***Note: First connection to your local WiFi can take longer time, which could result in watchdog delay and cause the board to reset. If you see in the terminal that the board keeps rebooting, then you need to open the watchdog jumper (JU1) for the initial start-up. When the device saves the data, close the jumper again.***
 
-## Modifying firmware
-
-Follow the instructions described in ```build/README.md```.
+    *Note: First connection to your local WiFi can take longer time, **which could result in watchdog delay and cause the board to reset**. If you see in the terminal that the board keeps rebooting, then you need to open the watchdog jumper (JU1) for the initial start-up. When the device saves the data, close the jumper again.*
