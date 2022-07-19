@@ -90,35 +90,46 @@ def wifi_disconnect():
     sta.disconnect()
 
 
+# send single data update to UDP server
+# TODO: proof of concept only, to be changed
+def udp_send(time, temperature, humidity):
+    HOST = CONFIG.get('MQTT_SERVER')
+    PORT = 9999
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    data = "bonrzur! %0.2f*C, %0.2f%%" % (temperature, humidity)
+    sock.sendto(bytes(data, "utf-8"), (HOST, PORT))
+    print("Sent:     {}".format(data))
+
+
 # open a socket to MQTT broker, send data and close the socket
 # temperature - float, in *C
 # humidity - float, in %
 # returns error code (0 = ok, 1 = wrong MQTT config; 2 = general error)
-def mqtt_publish(temperature, humidity):
-    server = CONFIG.get('MQTT_SERVER')
-    channel_id = CONFIG.get('MQTT_CHANNEL_ID')
-    key = CONFIG.get('MQTT_WRITE_KEY')
+# def mqtt_publish(temperature, humidity):
+#     server = CONFIG.get('MQTT_SERVER')
+#     channel_id = CONFIG.get('MQTT_CHANNEL_ID')
+#     key = CONFIG.get('MQTT_WRITE_KEY')
 
-    if server and channel_id and key:
-        try:
-            topic = "channels/" + channel_id + "/publish/" + key
-            payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
+#     if server and channel_id and key:
+#         try:
+#             topic = "channels/" + channel_id + "/publish/" + key
+#             payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
 
-            client = MQTTClient(aux_generate_id(), server)
-            client.connect()
-            client.publish(topic, payload)
-            client.disconnect()
-            print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
-            result = 0
-        except Exception as e:
-            print('[ERR] MQTT publish failed:',e)
-            result = 2
-    else:
-        print('Missing MQTT config, sending data skipped')
-        result = 1
+#             client = MQTTClient(aux_generate_id(), server)
+#             client.connect()
+#             client.publish(topic, payload)
+#             client.disconnect()
+#             print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
+#             result = 0
+#         except Exception as e:
+#             print('[ERR] MQTT publish failed:',e)
+#             result = 2
+#     else:
+#         print('Missing MQTT config, sending data skipped')
+#         result = 1
 
-    gc.collect()
-    return result
+#     gc.collect()
+#     return result
 
 
 
@@ -231,21 +242,22 @@ while True:
         if timer_mqtt_flag:
             timer_mqtt_flag = False
             temp, hum = BSP.sensor_get_average()
-            err = mqtt_publish(temp, hum)
+            udp_send(0, temp, hum)
+            # err = mqtt_publish(temp, hum)
 
-            #in case of error, reconnect to WiFi (shitty router crashes from time to time...)
-            if err == 2:
-                mqtt_timeouts += 1
-                if mqtt_timeouts < MQTT_MAX_TIMEOUT_COUNT:
-                    print('MQTT error %i/%i, trying to reconnect to router...' % (mqtt_timeouts, MQTT_MAX_TIMEOUT_COUNT))
-                    wifi_disconnect()
-                    utime.sleep_ms(1000)
-                    wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
-                else:
-                    print('Maximum number of MQTT errors exceeded.')
-                    safety.reboot()
-            elif err == 0:
-                mqtt_timeouts = 0 #reset the counter if it works again
+            # #in case of error, reconnect to WiFi (shitty router crashes from time to time...)
+            # if err == 2:
+            #     mqtt_timeouts += 1
+            #     if mqtt_timeouts < MQTT_MAX_TIMEOUT_COUNT:
+            #         print('MQTT error %i/%i, trying to reconnect to router...' % (mqtt_timeouts, MQTT_MAX_TIMEOUT_COUNT))
+            #         wifi_disconnect()
+            #         utime.sleep_ms(1000)
+            #         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
+            #     else:
+            #         print('Maximum number of MQTT errors exceeded.')
+            #         safety.reboot()
+            # elif err == 0:
+            #     mqtt_timeouts = 0 #reset the counter if it works again
 
         #time synchronization
         if timer_ntp_flag:
