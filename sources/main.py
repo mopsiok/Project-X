@@ -5,10 +5,9 @@ import safety
 safety.init_watchdog()
 
 import gc
-from umqtt.simple import MQTTClient
-import config, BSP, timing
+import config, BSP, timing, data_publisher
 gc.collect()
-import network, machine, ubinascii, utime, micropython, socket
+import network, machine, ubinascii, utime, micropython
 gc.collect()
 
 # -------------------------------------------------------------------
@@ -90,62 +89,19 @@ def wifi_disconnect():
     sta.disconnect()
 
 
-# send single data update to UDP server
-# TODO: proof of concept only, to be changed
-def udp_send(time, temperature, humidity):
-    HOST = CONFIG.get('MQTT_SERVER')
-    PORT = 9999
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    data = "bonrzur! %0.2f*C, %0.2f%%" % (temperature, humidity)
-    sock.sendto(bytes(data, "utf-8"), (HOST, PORT))
-    print("Sent:     {}".format(data))
-
-
-# open a socket to MQTT broker, send data and close the socket
-# temperature - float, in *C
-# humidity - float, in %
-# returns error code (0 = ok, 1 = wrong MQTT config; 2 = general error)
-# def mqtt_publish(temperature, humidity):
-#     server = CONFIG.get('MQTT_SERVER')
-#     channel_id = CONFIG.get('MQTT_CHANNEL_ID')
-#     key = CONFIG.get('MQTT_WRITE_KEY')
-
-#     if server and channel_id and key:
-#         try:
-#             topic = "channels/" + channel_id + "/publish/" + key
-#             payload = 'field1=%.2f&field2=%.2f' % (temperature, humidity)
-
-#             client = MQTTClient(aux_generate_id(), server)
-#             client.connect()
-#             client.publish(topic, payload)
-#             client.disconnect()
-#             print('Message published (%.2f*C, %.2f%%)' % (temperature, humidity))
-#             result = 0
-#         except Exception as e:
-#             print('[ERR] MQTT publish failed:',e)
-#             result = 2
-#     else:
-#         print('Missing MQTT config, sending data skipped')
-#         result = 1
-
-#     gc.collect()
-#     return result
-
-
-
 # -------------------------------------------------------------------
 # main application timer, executed once in a second
 # -------------------------------------------------------------------
 
-timer_presc = [0,0,0]
+timer_presc = [0,0,0,0]
 timer_hardware_flag = False
 timer_sensor_flag = False
-timer_mqtt_flag = False
+timer_publish_flag = False
 timer_ntp_flag = False
 timer_gc_flag = False
 timer_meminfo_flag = False
 def main_timer_callback(tim):
-    global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_mqtt_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
+    global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_publish_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
     for i in range(len(timer_presc)):
         timer_presc[i] += 1
     
@@ -156,13 +112,16 @@ def main_timer_callback(tim):
         timer_gc_flag = True
         timer_sensor_flag = True
 
-    if timer_presc[1] >= int(CONFIG['MQTT_PUBLISH_PERIOD']):
+    if timer_presc[1] >= 60:
         timer_presc[1] = 0
-        timer_mqtt_flag = True
         timer_ntp_flag = True
 
-    if timer_presc[2] >= 10:
+    if timer_presc[2] >= int(CONFIG['SERVER_PUBLISH_PERIOD']):
         timer_presc[2] = 0
+        timer_publish_flag = True
+
+    if timer_presc[3] >= 10:
+        timer_presc[3] = 0
         timer_meminfo_flag = True
 
 
@@ -199,6 +158,10 @@ err = config_read()
 err, network_info = wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'))
 ip = network_info[0]
 
+server_ip = CONFIG.get('SERVER_IP')
+server_port = int(CONFIG.get('SERVER_PORT'))
+publisher = data_publisher.DataPublisher(server_ip, server_port)
+
 #getting time
 err = timing.ntp_synchronize()
 if err == 0:
@@ -213,10 +176,6 @@ BSP.init_all()
 #set up a 1Hz timer for main application
 timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
-
-#in case of several consecutive MQTT errors and wifi reconnections, the board will reset, trying to fix the connection with shitty router
-mqtt_timeouts = 0
-MQTT_MAX_TIMEOUT_COUNT = 20
 
 while True:
     try:
@@ -238,26 +197,13 @@ while True:
             temp, hum = BSP.sensor_measure()
             print('Sensor: %04.1f*C, %04.1f%%' % (temp, hum))
         
-        #sending data to MQTT broker
-        if timer_mqtt_flag:
-            timer_mqtt_flag = False
+        #sending data to the server
+        if timer_publish_flag:
+            timer_publish_flag = False
             temp, hum = BSP.sensor_get_average()
-            udp_send(0, temp, hum)
-            # err = mqtt_publish(temp, hum)
-
-            # #in case of error, reconnect to WiFi (shitty router crashes from time to time...)
-            # if err == 2:
-            #     mqtt_timeouts += 1
-            #     if mqtt_timeouts < MQTT_MAX_TIMEOUT_COUNT:
-            #         print('MQTT error %i/%i, trying to reconnect to router...' % (mqtt_timeouts, MQTT_MAX_TIMEOUT_COUNT))
-            #         wifi_disconnect()
-            #         utime.sleep_ms(1000)
-            #         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
-            #     else:
-            #         print('Maximum number of MQTT errors exceeded.')
-            #         safety.reboot()
-            # elif err == 0:
-            #     mqtt_timeouts = 0 #reset the counter if it works again
+            time = timing.get_timestamp()
+            payload = publisher.serialize(time, temp, hum)
+            publisher.publish(payload)
 
         #time synchronization
         if timer_ntp_flag:

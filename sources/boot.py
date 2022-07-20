@@ -121,11 +121,10 @@ def server_update_response_data(info):
     webserver.WEBPAGE_INSERT_DATA[9] = CONFIG.get('PWM3_NIGHT')
     webserver.WEBPAGE_INSERT_DATA[10] = CONFIG.get('PWM4_DAY')
     webserver.WEBPAGE_INSERT_DATA[11] = CONFIG.get('PWM4_NIGHT')
-    webserver.WEBPAGE_INSERT_DATA[12] = CONFIG.get('MQTT_SERVER')
-    webserver.WEBPAGE_INSERT_DATA[13] = CONFIG.get('MQTT_CHANNEL_ID')
-    webserver.WEBPAGE_INSERT_DATA[14] = CONFIG.get('MQTT_WRITE_KEY')
-    webserver.WEBPAGE_INSERT_DATA[15] = CONFIG.get('MQTT_PUBLISH_PERIOD')
-    webserver.WEBPAGE_INSERT_DATA[16] = info
+    webserver.WEBPAGE_INSERT_DATA[12] = CONFIG.get('SERVER_IP')
+    webserver.WEBPAGE_INSERT_DATA[13] = CONFIG.get('SERVER_PORT')
+    webserver.WEBPAGE_INSERT_DATA[14] = CONFIG.get('SERVER_PUBLISH_PERIOD')
+    webserver.WEBPAGE_INSERT_DATA[15] = info
 
 
 # execute data received from user (if 255 returned, the server will stop)

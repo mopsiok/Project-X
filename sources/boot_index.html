@@ -72,23 +72,19 @@ input.pwm{width: 70px}
 </tr>
 </table>
 
-<p>MQTT Data streaming:</p>
+<p>Data streaming:</p>
 <table>
 <tr>
-<td>Server:</td>
-<td><input type="text" name="MQTT_SERVER" value="%s" /></td>
+<td>Server IP address:</td>
+<td><input type="text" name="SERVER_IP" value="%s" /></td>
 </tr>
 <tr>
-<td>Channel ID:</td>
-<td><input type="text" name="MQTT_CHANNEL_ID" value="%s" /></td>
-</tr>
-<tr>
-<td>Write Key:</td>
-<td><input type="text" name="MQTT_WRITE_KEY" value="%s" /></td>
+<td>Server port:</td>
+<td><input type="text" name="SERVER_PORT" value="%s" /></td>
 </tr>
 <tr>
 <td>Publish period [s]:</td>
-<td><input type="number" name="MQTT_PUBLISH_PERIOD" min="21" max="3600" value="%s" /></td>
+<td><input type="number" name="SERVER_PUBLISH_PERIOD" min="1" max="3600" value="%s" /></td>
 </tr>
 </table>
 <input type="submit" value="Save" />
