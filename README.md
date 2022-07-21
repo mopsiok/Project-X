@@ -106,7 +106,7 @@ After the build is finished, output binary file is copied to `binaries` director
 3. Send main index file (`sources/boot_index.html`)
 4. Send device configuration file (`sources/boot.conf`)
 
-    *Note: You can manually edit the file, providing your local WiFi credentials and MQTT server data. **Then, you won't need to configure the device as described in the next section.***
+    *Note: You can manually edit the file, providing your local WiFi credentials and TCP server data. **Then, you won't need to configure the device as described in the next section.***
 
 5. Disconnect from the device.
 6. Reset the board using module RST button or the external one.
@@ -119,7 +119,7 @@ After the build is finished, output binary file is copied to `binaries` director
     WebREPL daemon started on ws://0.0.0.0:8266
     Started webrepl in manual override mode
     Reading config file.
-    {'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
+    {'PWM3_DAY': '90', 'SERVER_PORT': '9999', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'SERVER_PUBLISH_PERIOD': '60', 'SERVER_IP': '192.168.0.230'}
     [NORMAL MODE]
 
 
@@ -128,7 +128,7 @@ After the build is finished, output binary file is copied to `binaries` director
 
     ### Entering Main Application ###
     Reading config file.
-    {'PWM3_DAY': '90', 'MQTT_WRITE_KEY': 'x', 'MQTT_CHANNEL_ID': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'MQTT_PUBLISH_PERIOD': '60', 'MQTT_SERVER': 'mqtt.thingspeak.com'}
+    {'PWM3_DAY': '90', 'SERVER_PORT': '0', 'WIFI_PASS': 'x', 'LIGHT_ON': '06:00:00', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'PWM1_NIGHT': '40', 'WIFI_SSID': 'x', 'SERVER_PUBLISH_PERIOD': '60', 'SERVER_IP': '192.168.0.230'}
     Connecting to WiFi (x)...
     Connected: ('192.168.0.80', '255.255.255.0', '192.168.0.1', '192.168.0.1')
     Synchronized to 2021.06.13 12:29:17
@@ -147,7 +147,7 @@ After the build is finished, output binary file is copied to `binaries` director
     WebREPL daemon started on ws://192.168.4.1:8266
     Started webrepl in manual override mode
     Reading config file.
-    {'PWM3_DAY': '90', 'PWM1_NIGHT': '40', 'MQTT_SERVER': 'mqtt.thingspeak.com', 'MQTT_CHANNEL_ID': '0', 'LIGHT_ON': '06:00:00', 'MQTT_WRITE_KEY': 'YOURKEY', 'MQTT_PUBLISH_PERIOD': '60', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'WIFI_SSID': 'yourssid', 'WIFI_PASS': 'yourpass', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00'}
+    {'PWM3_DAY': '90', 'PWM1_NIGHT': '40', 'SERVER_IP': '192.168.0.230', 'SERVER_PORT': '9999', 'LIGHT_ON': '06:00:00', 'SERVER_PUBLISH_PERIOD': '60', 'PWM2_DAY': '90', 'PWM1_DAY': '90', 'PWM4_NIGHT': '40', 'PWM3_NIGHT': '40', 'PWM2_NIGHT': '40', 'WIFI_SSID': 'yourssid', 'WIFI_PASS': 'yourpass', 'PWM4_DAY': '90', 'LIGHT_OFF': '23:00:00'}
     [CONFIG MODE]
     Access Point started (PROJECT_X,projectx)
     Network info: ('192.168.4.1', '255.255.255.0', '192.168.4.1', '208.67.222.222')

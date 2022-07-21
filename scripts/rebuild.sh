@@ -19,6 +19,6 @@ make
 echo ========================================================
 echo Copying output files to build and shared directories
 echo ========================================================
-cp -f build-GENERIC/firmware-combined.bin "$projectDir/binaries/$(date +"%Y%m%d-%H%M%S").bin"
+# cp -f build-GENERIC/firmware-combined.bin "$projectDir/binaries/$(date +"%Y%m%d-%H%M%S").bin"
 cp -f build-GENERIC/firmware-combined.bin "$projectDir/binaries/last_build.bin"
 cp -f build-GENERIC/firmware-combined.bin "/media/sf_shared/outputs/last_build.bin"

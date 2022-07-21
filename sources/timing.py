@@ -9,6 +9,8 @@ import safety
 # configuration
 # -------------------------------------------------------------------
 
+#difference between device's epoch (2000-01-01 00:00:00 UTC) and standard linux epoch
+LINUX_EPOCH_OFFSET = 946677600
 
 
 # -------------------------------------------------------------------
@@ -79,6 +81,11 @@ def get_date():
 #   returns:    a tuple of (year, month, day, hour, minute, second)
 def get_datetime():
     return utime.localtime()[:6]
+
+
+# get current timestamp since linux epoch
+def get_timestamp():
+    return utime.time() + LINUX_EPOCH_OFFSET
 
 
 

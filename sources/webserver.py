@@ -112,7 +112,7 @@ def start(host, port, index_filename, process_callback=None, respond_callback=No
         print('Loading webpage...')
         load_webpage(index_filename)
     except:
-        print('Error while loading webpage from %.' % filename)
+        print('Error while loading webpage from %.' % index_filename)
 
     try:
         s = socket.socket()
