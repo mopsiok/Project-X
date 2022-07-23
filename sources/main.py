@@ -202,8 +202,8 @@ while True:
             timer_publish_flag = False
             temp, hum = BSP.sensor_get_average()
             time = timing.get_timestamp()
-            payload = publisher.serialize(time, temp, hum)
-            publisher.publish(payload)
+            message = [time, temp, hum]
+            publisher.publish([message,])
 
         #time synchronization
         if timer_ntp_flag:
