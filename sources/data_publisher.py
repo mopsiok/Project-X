@@ -12,7 +12,9 @@ class DataPublisher():
         self.ip_address = ip_address
         self.port = port
     
+    # returns True if publish successful, False otherwise
     def publish(self, messages: list):
+        result = True
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect((self.ip_address, self.port))
@@ -22,5 +24,7 @@ class DataPublisher():
         except Exception as e: 
             print('Publish failed: ')
             print(e)
+            result = False
         finally:
             sock.close()
+        return result

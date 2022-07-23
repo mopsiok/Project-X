@@ -17,6 +17,8 @@ gc.collect()
 # configuration dictionary
 CONFIG = {} 
 
+# duration [in s] of constantly failing connections to the server, until the device reboots
+CONNECTION_FAILED_REBOOT_TIME = 60*60*3
 
 
 # -------------------------------------------------------------------
@@ -47,6 +49,26 @@ def config_write():
     print('Writing config file.')
     err = config.write(CONFIG)
     return err
+
+# in case of transmission error, reconnect to WiFi (or reboot if it doesn't help)
+def publish_fail_counter_handler():
+    global fail_counter
+    fail_counter += 1
+    period = int(CONFIG['SERVER_PUBLISH_PERIOD'])
+    if fail_counter * period > CONNECTION_FAILED_REBOOT_TIME:
+        print('Maximum number of connection failures exceeded. The device will reboot.')
+        #TODO make sure that unpublished data are saved to flash!
+        safety.reboot()
+    else:
+        print('Connection failure (%03i), trying to reconnect to router. (Max failure time: %d sec)' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
+        wifi_disconnect()
+        utime.sleep_ms(1000)
+        wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
+
+# reset fail counter if the connection is restored
+def publish_fail_counter_reset():
+    global fail_counter
+    fail_counter = 0
 
 
 
@@ -177,6 +199,9 @@ BSP.init_all()
 timer = machine.Timer(-1)
 timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
+#used to restart WiFi or reboot device if constantly failed to publish messages
+fail_counter = 0
+
 while True:
     try:
         #updating hardware
@@ -203,7 +228,12 @@ while True:
             temp, hum = BSP.sensor_get_average()
             time = timing.get_timestamp()
             message = [time, temp, hum]
-            publisher.publish([message,])
+            
+            success = publisher.publish([message,])
+            if not success:
+                publish_fail_counter_handler()
+            else:
+                publish_fail_counter_reset()
 
         #time synchronization
         if timer_ntp_flag:
