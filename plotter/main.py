@@ -22,6 +22,7 @@ def main():
         plotter = Plotter(start_date=args.s, 
                             end_date=args.e,
                             duration=args.d)
+        plotter.read_data()
         plotter.plot_data()
     except Exception as exception:
         if PlotterExceptions.WRONG_ARGS in exception.args:

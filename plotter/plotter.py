@@ -17,6 +17,9 @@ STORAGE_DIRECTORY_PATH = "../server/storage"
 # path to ESP8266 side implementation - needed to import shared modules
 ESP8266_SOURCES_PATH = "../sources"
 
+# path to Measurement Manager application directory - used to plot data
+GENERIC_PLOTTER_SOURCES = "../external/measurement_manager/app"
+
 SECONDS_IN_DAY = 60*60*24
 
 
@@ -32,11 +35,16 @@ def _get_directory_path(file : str = __file__):
 def shared_modules_init():
     dir_path = _get_directory_path()
     esp_modules_path = os.path.realpath(dir_path / ESP8266_SOURCES_PATH)
+    plotter_path = os.path.realpath(dir_path / GENERIC_PLOTTER_SOURCES)
     sys.path.append(esp_modules_path)
+    sys.path.append(plotter_path)
 
 shared_modules_init()
 import message
-import data_storage
+from data_storage import DataStorage
+
+import helpers
+from GenericPlot import GenericPlot
 
 
 #####################################################################
@@ -62,11 +70,14 @@ class Plotter():
         self.period = end_date - start_date
         self.start_date = start_date
         self.end_date = end_date
-
         print(f"start: {self.start_date}\nend: {self.end_date}\nperiod: {self.period/SECONDS_IN_DAY}")
 
+        self.messages_list = []
+
+
+    def read_data(self):
         dir_path = _get_directory_path() / STORAGE_DIRECTORY_PATH
-        storage = data_storage.DataStorage(dir_path)
+        storage = DataStorage(dir_path)
         data = storage.read_data()
         data = message.parse_messages(data)
         self.messages_list = data
@@ -80,10 +91,12 @@ class Plotter():
 
         print("timestamp:")
         print(" ".join(["%d" % item for item in time_list]))
-        print("\n\ntemperature:")
+        print("\ntemperature:")
         print(" ".join(["%.1f" % item for item in temp_list]))
-        print("\n\nhumidity:")
+        print("\nhumidity:")
         print(" ".join(["%.1f" % item for item in hum_list]))
+
+        plot = GenericPlot()
 
 
     # Convert list of messages into separate arrays (axes)

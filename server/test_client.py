@@ -42,7 +42,6 @@ def shared_modules_init():
     sys.path.append(esp_modules_path)
 
 shared_modules_init()
-import message
 import data_publisher
 
 
