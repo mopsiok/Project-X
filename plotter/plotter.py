@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-import os, sys
+import os, sys, time
 
 #####################################################################
 #                           Config
@@ -43,7 +43,10 @@ shared_modules_init()
 import message
 from data_storage import DataStorage
 
+# Measurement Manager modules
 import helpers
+from Manager import Manager
+from Logger import Logger
 from GenericPlot import GenericPlot
 
 
@@ -75,7 +78,7 @@ class Plotter():
         self.messages_list = []
 
 
-    def read_data(self):
+    def load_data_from_storage(self):
         dir_path = _get_directory_path() / STORAGE_DIRECTORY_PATH
         storage = DataStorage(dir_path)
         data = storage.read_data()
@@ -87,16 +90,30 @@ class Plotter():
 
 
     def plot_data(self):
+        self._prepare_manager()
+
         time_list, temp_list, hum_list = self._reshape_data(self.messages_list)
 
-        print("timestamp:")
-        print(" ".join(["%d" % item for item in time_list]))
-        print("\ntemperature:")
-        print(" ".join(["%.1f" % item for item in temp_list]))
-        print("\nhumidity:")
-        print(" ".join(["%.1f" % item for item in hum_list]))
+        self._run_manager()
 
-        plot = GenericPlot()
+
+    # Create all Measurement Manager instances
+    def _prepare_manager(self):
+        output_dir = Path('logs') / time.strftime('%Y_%m_%d__%H_%M_%S')
+        self.logger = Logger(output_dir / 'system.log')
+        self.manager = Manager(output_dir, self.logger)
+        self.plot = GenericPlot("Project X", 0, self.logger, self)
+        
+        self.manager.registerObject(self.plot)
+
+
+    # Run the manager
+    def _run_manager(self):
+        self.logger.info("STARTING MANAGER...")
+        if self.manager.start():
+            helpers.waitToFinish(2)
+            self.logger.info("STOPPING MANAGER...")
+            self.manager.stop()
 
 
     # Convert list of messages into separate arrays (axes)
