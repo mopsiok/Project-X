@@ -1,25 +1,42 @@
-from generic_plot import GenericPlot
-from data_storage import DataStorage
-import message
-
 from enum import Enum
 from pathlib import Path
-import os
+import os, sys
 
 #####################################################################
 #                           Config
 #####################################################################
 
 # path to storage directory, where all ProjectX data and backups are stored
-# pointing from this file's directory
 STORAGE_DIRECTORY_PATH = "../server/storage"
 
 
 #####################################################################
-#                           Not config
+#                    Not config, don't change
 #####################################################################
 
+# path to ESP8266 side implementation - needed to import shared modules
+ESP8266_SOURCES_PATH = "../sources"
+
 SECONDS_IN_DAY = 60*60*24
+
+
+#####################################################################
+#              Auxiliary functions and environment setup
+#####################################################################
+
+# Returns directory path of given file (this file used if no arguments)
+def _get_directory_path(file : str = __file__):
+    return Path(os.path.dirname(os.path.realpath(file)))
+
+# Extend python path to enable importing shared modules
+def shared_modules_init():
+    dir_path = _get_directory_path()
+    esp_modules_path = os.path.realpath(dir_path / ESP8266_SOURCES_PATH)
+    sys.path.append(esp_modules_path)
+
+shared_modules_init()
+import message
+import data_storage
 
 
 #####################################################################
@@ -49,7 +66,7 @@ class Plotter():
         print(f"start: {self.start_date}\nend: {self.end_date}\nperiod: {self.period/SECONDS_IN_DAY}")
 
         dir_path = _get_directory_path() / STORAGE_DIRECTORY_PATH
-        storage = DataStorage(dir_path)
+        storage = data_storage.DataStorage(dir_path)
         data = storage.read_data()
         data = message.parse_messages(data)
         self.messages_list = data
@@ -59,7 +76,6 @@ class Plotter():
 
 
     def plot_data(self):
-        plot = GenericPlot()
         time_list, temp_list, hum_list = self._reshape_data(self.messages_list)
 
         print("timestamp:")
@@ -87,12 +103,3 @@ class Plotter():
 
 class PlotterExceptions(Enum):
     WRONG_ARGS = "Wrong arguments"
-
-
-#####################################################################
-#                       Auxiliary functions
-#####################################################################
-
-# returns directory path of given file (this file used if no arguments)
-def _get_directory_path(file : str = __file__):
-    return Path(os.path.dirname(os.path.realpath(file)))

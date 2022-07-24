@@ -1,5 +1,4 @@
 from pathlib import Path
-import time
 
 # main log file name, do not change
 STORAGE_FILE_NAME = 'storage.bin'
@@ -14,12 +13,9 @@ class DataStorage():
             pass
 
     # appends serialized data to storage file
-    # returns execution time (in seconds)
     def append_data(self, serialized_data: bytes):
-        start = time.time()
         with open(self.storage_file_path, 'ab') as storage_file:
             storage_file.write(serialized_data)
-        return time.time() - start
     
     # when path is None, default storage file is used
     # returns all data read from the file
