@@ -28,8 +28,9 @@ def main():
 
     print(f"Project X data storage server. Listening on {HOST}:{PORT}.\n")
 
-    storage = DataStorage(STORAGE_DIR_PATH, message.parse_messages)
+    storage = DataStorage(STORAGE_DIR_PATH)
     data = storage.read_data()
+    data = message.parse_messages(data)
     print(f"Stored messages count: {len(data)}")
     if len(data) > 0:
         print(f"Last message:\n{message.format(data[-1])}\n")
