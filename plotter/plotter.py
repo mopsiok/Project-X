@@ -93,7 +93,7 @@ class Plotter():
         self._prepare_manager()
 
         time_list, temp_list, hum_list = self._reshape_data(self.messages_list)
-
+        self.plot.show_test_plot(time_list, temp_list, hum_list)
         self._run_manager()
 
 
