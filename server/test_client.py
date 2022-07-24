@@ -43,34 +43,12 @@ def shared_modules_init():
 
 shared_modules_init()
 import message
-import data_storage
+import data_publisher
 
 
 #####################################################################
 #                       Main application
 #####################################################################
-
-class DataPublisher():
-    def __init__(self, ip_address: str, port: int):
-        self.ip_address = ip_address
-        self.port = port
-    
-    # returns True if publish successful, False otherwise
-    def publish(self, messages: list):
-        result = True
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            sock.connect((self.ip_address, self.port))
-            data = message.create_packet(messages)
-            sock.sendall(data)
-            print('Data published.')
-        except Exception as e: 
-            print('Publish failed: ')
-            print(e)
-            result = False
-        finally:
-            sock.close()
-        return result
 
 
 def generate_messages(count: int = 1):
@@ -100,7 +78,7 @@ def publish_fail_counter_reset():
 
 
 fail_counter = 0
-publisher = DataPublisher(SERVER_HOST, SERVER_PORT)
+publisher = data_publisher.DataPublisher(SERVER_HOST, SERVER_PORT)
 messages = generate_messages(SINGLE_PACKET_MESSAGE_COUNT)
 
 for i in range(REPEAT_COUNT):
