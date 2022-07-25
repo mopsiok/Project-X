@@ -5,7 +5,7 @@ import safety
 safety.init_watchdog()
 
 import gc
-import config, BSP, timing, data_publisher
+import config, BSP, timing, data_publisher, data_storage, data_cache
 gc.collect()
 import network, machine, ubinascii, utime, micropython
 gc.collect()
@@ -60,7 +60,7 @@ def publish_fail_counter_handler():
         #TODO make sure that unpublished data are saved to flash!
         safety.reboot()
     else:
-        print('Connection failure (%03i), trying to reconnect to router. (Max failure time: %d sec)' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
+        print('Connection failed (%03i). Max failure time: %d sec' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
         wifi_disconnect()
         utime.sleep_ms(1000)
         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
@@ -183,6 +183,8 @@ ip = network_info[0]
 server_ip = CONFIG.get('SERVER_IP')
 server_port = int(CONFIG.get('SERVER_PORT'))
 publisher = data_publisher.DataPublisher(server_ip, server_port)
+storage = data_storage.DataStorage()
+cache = data_cache.DataCache(storage, publisher)
 
 #getting time
 err = timing.ntp_synchronize()
@@ -227,13 +229,15 @@ while True:
             timer_publish_flag = False
             temp, hum = BSP.sensor_get_average()
             time = timing.get_timestamp()
-            message = [time, temp, hum]
+            msg = [time, temp, hum]
             
-            success = publisher.publish([message,])
-            if not success:
-                publish_fail_counter_handler()
-            else:
+            cache.save_messages_to_ram([msg,])
+            #TODO send flash messages first, as they were created earlier
+            success = cache.publish_ram_messages()
+            if success:
                 publish_fail_counter_reset()
+            else:
+                publish_fail_counter_handler()
 
         #time synchronization
         if timer_ntp_flag:

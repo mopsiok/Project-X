@@ -80,7 +80,7 @@ class Plotter():
 
     def load_data_from_storage(self):
         dir_path = _get_directory_path() / STORAGE_DIRECTORY_PATH
-        storage = DataStorage(dir_path)
+        storage = DataStorage(False, dir_path)
         data = storage.read_data()
         data = message.parse_messages(data)
         self.messages_list = data

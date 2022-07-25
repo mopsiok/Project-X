@@ -66,7 +66,7 @@ def main():
 
     print(f"Project X data storage server. Listening on {SERVER_HOST}:{SERVER_PORT}.\n")
 
-    storage = data_storage.DataStorage(STORAGE_DIRECTORY_PATH)
+    storage = data_storage.DataStorage(False, STORAGE_DIRECTORY_PATH)
     data = storage.read_data()
     data = message.parse_messages(data)
     print(f"Stored messages count: {len(data)}")
