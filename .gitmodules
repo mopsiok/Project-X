@@ -1,0 +1,3 @@
+[submodule "external/measurement_manager"]
+	path = external/measurement_manager
+	url = git@gitlab.com:mopsiok/measurement_manager.git
