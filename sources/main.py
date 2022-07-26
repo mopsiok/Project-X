@@ -5,7 +5,7 @@ import safety
 safety.init_watchdog()
 
 import gc
-import config, BSP, timing, data_publisher, data_storage, data_cache
+import config, BSP, timing, data_publisher, data_storage, data_cache, message
 gc.collect()
 import network, machine, ubinascii, utime, micropython
 gc.collect()
@@ -194,6 +194,11 @@ else:
     timing.set_time(2021, 1, 1, 12, 0, 0)
     print("Local time set to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
 
+#TODO for tests only, to be deleted!
+t = timing.get_timestamp()
+tmp_payload = b''.join(message.serialize([t+i, 0, 0]) for i in range(100))
+storage.append_data(tmp_payload)
+
 #initialize hardware
 BSP.init_all()
 
@@ -232,8 +237,9 @@ while True:
             msg = [time, temp, hum]
             
             cache.save_messages_to_ram([msg,])
-            #TODO send flash messages first, as they were created earlier
-            success = cache.publish_ram_messages()
+            success = cache.publish_flash_messages_and_clear() #send flash messages first, as they were created earlier
+            if success:
+                success = cache.publish_ram_messages_and_clear()
             if success:
                 publish_fail_counter_reset()
             else:

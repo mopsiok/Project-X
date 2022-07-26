@@ -1,5 +1,9 @@
+import os
+
 # main log file name, do not change
 STORAGE_FILE_NAME = 'storage.bin'
+
+OS_FILE_STAT_SIZE_INDEX = 6
 
 class DataStorage():
     # When isEspDevice=True, limited implementation is started, suitable for micropython (no dir path is used)
@@ -22,18 +26,16 @@ class DataStorage():
         with open(self.storage_file_path, 'ab+') as storage_file:
             storage_file.write(serialized_data)
     
-    # when path is None, default storage file is used
-    # returns all data read from the file
-    def read_data(self, storage_file_path: str = None):
-        if not storage_file_path:
-            storage_file_path = self.storage_file_path
-        with open(storage_file_path, 'rb') as storage_file:
+    # returns all data read from the storage file
+    def read_data(self):
+        with open(self.storage_file_path, 'rb') as storage_file:
             raw_data = storage_file.read()
         return raw_data
 
-    # when path is None, default storage file is used
-    # clears all data from the file
-    def clear_data(self, storage_file_path: str = None):
-        if not storage_file_path:
-            storage_file_path = self.storage_file_path
-        open(storage_file_path, 'w').close()
+    # clears all data from the storage file
+    def clear_data(self):
+        open(self.storage_file_path, 'w').close()
+
+    # returns size of the storage file in bytes
+    def check_storage_size(self):
+        return os.stat(self.storage_file_path)[OS_FILE_STAT_SIZE_INDEX]

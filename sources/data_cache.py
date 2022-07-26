@@ -1,4 +1,4 @@
-# Temporary cache for unsent data when TCP server is down.
+# Temporary cache manager for unsent data when TCP server is down.
 
 import message
 from data_storage import DataStorage
@@ -16,7 +16,7 @@ class DataCache():
 
     # Publish messages from RAM cache, clear it when successful
     # Returns True when publish OK
-    def publish_ram_messages(self):
+    def publish_ram_messages_and_clear(self):
         success = self.publisher.publish(self.cache)
         if success:
             self.cache = []
@@ -24,16 +24,22 @@ class DataCache():
 
     # Publish messages from internal FLASH storage, clear the file when successful
     # Returns True when publish OK
-    def publish_flash_messages(self):
-        flash_data = message.parse_messages(self.storage.read_data())
-        success = self.publisher.publish(flash_data)
-        if success:
-            print("FLASH data sent successfully, clearing internal storage.")
-            self.storage.clear_data()
-        else:
-            print("FLASH data publish failed.")
-        return success
+    def publish_flash_messages_and_clear(self):
+        size = self.storage.check_storage_size()
+        if (size > 0):
+            print('Trying to send %d messages from FLASH storage.' % (size,))
+            #TODO add splitting to smaller packets, same as in data publisher
+            flash_data = message.parse_messages(self.storage.read_data())
+            success = self.publisher.publish(flash_data)
+            if success:
+                print("FLASH data sent successfully, clearing internal storage.")
+                self.storage.clear_data()
+            else:
+                print("FLASH data publish failed.")
+            return success
+        return True
 
     # Main cache handler, execute periodically
     def handler(self):
         pass
+
