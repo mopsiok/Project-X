@@ -12,9 +12,9 @@ STORAGE_DIRECTORY_PATH = "storage/"
 # TCP port to listen for new data
 SERVER_PORT = 9999
 
-REPEAT_COUNT = 30
+REPEAT_COUNT = 3
 CONNECTION_FAILED_REBOOT_COUNT = 10
-SINGLE_PACKET_MESSAGE_COUNT = 1
+SINGLE_PACKET_MESSAGE_COUNT = 100
 
 
 #####################################################################
@@ -54,7 +54,7 @@ def generate_messages(count: int = 1):
     message_list = []
     timestamp = int(time.time())
     for i in range(count):
-        msg = [timestamp+i, 20+i, 50+i]
+        msg = [timestamp+i, 0, 0]
         message_list.append(msg)
     return message_list
 

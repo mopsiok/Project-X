@@ -25,7 +25,11 @@ class DataPublisher():
         while (offset < msg_count):
             chunk = messages[offset : offset + MESSAGES_PER_CHUNK]
             offset += MESSAGES_PER_CHUNK
-            self._publish_single_chunk(chunk)
+            result = self._publish_single_chunk(chunk)
+            if not result:
+                return False
+        return True
+
     
     # Open TCP connection and send given list of messages
     # returns True if publish successful, False otherwise
@@ -41,7 +45,7 @@ class DataPublisher():
             data = message.create_packet(messages)
             sock.sendall(data)
             result = True
-            print('Data published.')
+            print('Data published (msg count: %d).' % len(messages))
         except Exception as e: 
             print('Publish failed: ')
             print(e)
