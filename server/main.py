@@ -40,6 +40,7 @@ def shared_modules_init():
 shared_modules_init()
 import message
 import data_storage
+import data_cache
 
 
 #####################################################################
@@ -47,6 +48,7 @@ import data_storage
 #####################################################################
 
 storage = None
+cache = None
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -54,24 +56,37 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         payload = message.receive_packet(self.request.recv)
         messages = message.parse_messages(payload)
 
-        # TODO add timeout?
+        # duplicated data rejection based on ram cache
+        messages_checked = []
+        for msg in messages:
+            if not msg in cache.cache:
+                messages_checked.append(msg)
+        payload_checked = b''.join(
+            message.serialize(message) for message in messages_checked)
+        
+        # updating cache and storage
+        cache.save_messages_to_ram(messages_checked)
+        storage.append_data(payload_checked)
 
-        storage.append_data(payload)
-        for i in range(len(messages)):
-            print(f"{message.format(messages[i])}    [{ip_address}]  [{i+1:3d}]")
+        # TODO add timeout?
+        for count, msg in enumerate(messages_checked):
+            print(f"{message.format(msg)}    [{ip_address}]  [{count+1:2d}]")
 
 
 def main():
-    global storage
+    global storage, cache
 
     print(f"Project X data storage server. Listening on {SERVER_HOST}:{SERVER_PORT}.\n")
 
     storage = data_storage.DataStorage(False, STORAGE_DIRECTORY_PATH)
-    data = storage.read_data()
+    cache = data_cache.DataCache(storage, None)
+    data = storage.read_all_data()
     data = message.parse_messages(data)
+    cache.save_messages_to_ram(data)
     print(f"Stored messages count: {len(data)}")
     if len(data) > 0:
         print(f"Last message:\n{message.format(data[-1])}\n")
+    del data
 
     with socketserver.TCPServer((SERVER_HOST, SERVER_PORT), MyTCPHandler) as server:
         server.serve_forever()
