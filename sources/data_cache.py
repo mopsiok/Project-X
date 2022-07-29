@@ -2,7 +2,7 @@
 
 import message
 from data_storage import DataStorage
-from data_publisher import DataPublisher
+from data_publisher import DataPublisher, MESSAGES_PER_CHUNK
 
 class DataCache():
     def __init__(self, storage: DataStorage, publisher: DataPublisher):
@@ -22,21 +22,27 @@ class DataCache():
             self.cache = []
         return success
 
-    # Publish messages from internal FLASH storage, clear the file when successful
-    # Returns True when publish OK
+    # Publish messages from internal FLASH storage by chunks, clear the file when successful
+    # Returns True when publish OK, False otherwise
+    # Note: If publishing any chunk fails, the whole process stops and it needs to be restarted.
+    # This is okey though, as server side checks for duplicated data and rejects it
     def publish_flash_messages_and_clear(self):
         size = self.storage.check_storage_size()
         if (size > 0):
             print('Trying to send %d messages from FLASH storage.' % (size,))
-            #TODO add splitting to smaller packets, same as in data publisher
-            flash_data = message.parse_messages(self.storage.read_data())
-            success = self.publisher.publish(flash_data)
-            if success:
-                print("FLASH data sent successfully, clearing internal storage.")
-                self.storage.clear_data()
-            else:
-                print("FLASH data publish failed.")
-            return success
+
+            # slicing into smaller chunks is needed as the file content might not fit in limited RAM of ESP8266
+            offset = 0
+            chunk_size = message.MESSAGE_SIZE * MESSAGES_PER_CHUNK
+            while offset < size:
+                raw_chunk = self.storage.read_data(offset, chunk_size)
+                flash_data_chunk = message.parse_messages(raw_chunk)
+                success = self.publisher.publish(flash_data_chunk)
+                if not success:
+                    return False
+                offset += chunk_size
+            print("FLASH data sent successfully, clearing internal storage.")
+            self.storage.clear_data()
         return True
 
     # Main cache handler, execute periodically

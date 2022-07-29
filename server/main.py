@@ -62,13 +62,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             if not msg in cache.cache:
                 messages_checked.append(msg)
         payload_checked = b''.join(
-            message.serialize(message) for message in messages_checked)
+            message.serialize(msg) for msg in messages_checked)
         
         # updating cache and storage
         cache.save_messages_to_ram(messages_checked)
         storage.append_data(payload_checked)
 
-        # TODO add timeout?
         for count, msg in enumerate(messages_checked):
             print(f"{message.format(msg)}    [{ip_address}]  [{count+1:2d}]")
 
