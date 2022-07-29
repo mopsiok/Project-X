@@ -27,9 +27,16 @@ class DataStorage():
             storage_file.write(serialized_data)
     
     # returns all data read from the storage file
-    def read_data(self):
+    def read_all_data(self):
         with open(self.storage_file_path, 'rb') as storage_file:
             raw_data = storage_file.read()
+        return raw_data
+
+    # returns data read from the specific range of storage file
+    def read_data(self, start_index, bytes_count):
+        with open(self.storage_file_path, 'rb') as storage_file:
+            storage_file.seek(start_index)
+            raw_data = storage_file.read(bytes_count)
         return raw_data
 
     # clears all data from the storage file
