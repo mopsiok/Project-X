@@ -24,6 +24,7 @@ SENSOR_READ_PERIOD = 5
 #SERVER_PUBLISH_PERIOD is derived from CONFIG
 NTP_SYNC_PERIOD = 60
 GARBAGE_COLLECTOR_PERIOD = 10
+FLASH_STORAGE_PERIOD = 60*15 # saving RAM cache into FLASH when server is unavailable
 
 # NTP server trigger period [in s] in case when time hasn't been synchronized after reset
 NTP_SYNC_PERIOD_AFTER_RESET = 5
@@ -63,12 +64,12 @@ def config_write():
 
 # in case of transmission error, reconnect to WiFi (or reboot if it doesn't help)
 def publish_fail_counter_handler():
-    global fail_counter
+    global fail_counter, cache
     fail_counter += 1
     period = int(CONFIG['SERVER_PUBLISH_PERIOD'])
     if fail_counter * period > CONNECTION_FAILED_REBOOT_TIME:
         print('Maximum number of connection failures exceeded. The device will reboot.')
-        #TODO make sure that unpublished data are saved to flash!
+        cache.save_cache_to_flash()
         safety.reboot()
     else:
         print('Connection failed (%03i). Max failure time: %d sec' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
@@ -131,7 +132,8 @@ TIMER_HARDWARE_UPDATE = 1
 TIMER_SENSOR_READ = 2
 TIMER_NTP_SYNC = 3
 TIMER_GARBAGE_COLLECTOR = 4
-timer_periods = [0, HARDWARE_UPDATE_PERIOD, SENSOR_READ_PERIOD, NTP_SYNC_PERIOD, GARBAGE_COLLECTOR_PERIOD]
+TIMER_FLASH_STORAGE = 5
+timer_periods = [0, HARDWARE_UPDATE_PERIOD, SENSOR_READ_PERIOD, NTP_SYNC_PERIOD, GARBAGE_COLLECTOR_PERIOD, FLASH_STORAGE_PERIOD]
 timer_counters = [0,] * len(timer_periods)
 timer_flags = [False,] * len(timer_periods)
 def main_timer_callback(tim):
@@ -243,6 +245,12 @@ while True:
                 publish_fail_counter_reset()
             else:
                 publish_fail_counter_handler()
+
+        # saving RAM cache into FLASH storage, when server is unavailable
+        if timer_flags[TIMER_FLASH_STORAGE]:
+            timer_flags[TIMER_FLASH_STORAGE] = False
+            if fail_counter > 0:
+                cache.save_cache_to_flash()
 
         #time synchronization
         if timer_flags[TIMER_NTP_SYNC]:

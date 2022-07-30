@@ -14,6 +14,13 @@ class DataCache():
     def save_messages_to_ram(self, message_list: list):
         self.cache.extend(message_list)
 
+    # Saves current RAM cache into FLASH storage and clears the RAM
+    def save_cache_to_flash(self):
+        print("Copying %d messages into FLASH storage." % len(self.cache))
+        payload = b''.join(message.serialize(msg) for msg in self.cache)
+        self.storage.append_data(payload)
+        self.cache = []
+
     # Publish messages from RAM cache, clear it when successful
     # Returns True when publish OK
     def publish_ram_messages_and_clear(self):
@@ -29,7 +36,7 @@ class DataCache():
     def publish_flash_messages_and_clear(self):
         size = self.storage.check_storage_size()
         if (size > 0):
-            print('Trying to send %d messages from FLASH storage.' % (size,))
+            print('Trying to send %d messages from FLASH storage.' % (size / message.MESSAGE_SIZE,))
 
             # slicing into smaller chunks is needed as the file content might not fit in limited RAM of ESP8266
             offset = 0
@@ -44,10 +51,3 @@ class DataCache():
             print("FLASH data sent successfully, clearing internal storage.")
             self.storage.clear_data()
         return True
-
-    # Main cache handler, execute periodically
-    # Once a given time, it copies RAM cache into FLASH storage, to compromise 
-    # between minimal flash usage and minimal data loss in case of a reset
-    def handler(self):
-        pass
-
