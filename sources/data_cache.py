@@ -46,6 +46,8 @@ class DataCache():
         return True
 
     # Main cache handler, execute periodically
+    # Once a given time, it copies RAM cache into FLASH storage, to compromise 
+    # between minimal flash usage and minimal data loss in case of a reset
     def handler(self):
         pass
 
