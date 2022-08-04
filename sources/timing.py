@@ -26,7 +26,9 @@ def set_time(year, month, day, hour, minute, second):
 # synchronize local time with NTP server
 # this function should be executed once in a couple of minutes
 #   returns:    0 if completed, 1 otherwise
+_is_time_synchronized = False
 def ntp_synchronize():
+    global _is_time_synchronized
     try:
         extra_hour = 3600
         t = ntptime.time() + extra_hour #synchronize to Central European Time (UTC+1)
@@ -35,10 +37,15 @@ def ntp_synchronize():
         
         year, month, day, hour, minute, second = utime.localtime(t)[:6]
         set_time(year, month, day, hour, minute, second)
+        _is_time_synchronized = True
         return 0
     except Exception as e:
         print('[ERR] NTP synchronization failed:',e)
         return 1
+
+# returns True when at least one NTP synchronization has been completed
+def is_synchronized():
+    return _is_time_synchronized
 
 
 # checks if current time is within specified range

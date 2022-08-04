@@ -5,7 +5,7 @@ import safety
 safety.init_watchdog()
 
 import gc
-import config, BSP, timing, data_publisher
+import config, BSP, timing, data_publisher, data_storage, data_cache, message
 gc.collect()
 import network, machine, ubinascii, utime, micropython
 gc.collect()
@@ -16,6 +16,18 @@ gc.collect()
 
 # configuration dictionary
 CONFIG = {} 
+
+
+# periodic "tasks" refresh rates [in s]
+HARDWARE_UPDATE_PERIOD = 1
+SENSOR_READ_PERIOD = 5
+#SERVER_PUBLISH_PERIOD is derived from CONFIG
+NTP_SYNC_PERIOD = 60
+GARBAGE_COLLECTOR_PERIOD = 10
+FLASH_STORAGE_PERIOD = 60*15 # saving RAM cache into FLASH when server is unavailable
+
+# NTP server trigger period [in s] in case when time hasn't been synchronized after reset
+NTP_SYNC_PERIOD_AFTER_RESET = 5
 
 # duration [in s] of constantly failing connections to the server, until the device reboots
 CONNECTION_FAILED_REBOOT_TIME = 60*60*3
@@ -52,15 +64,15 @@ def config_write():
 
 # in case of transmission error, reconnect to WiFi (or reboot if it doesn't help)
 def publish_fail_counter_handler():
-    global fail_counter
+    global fail_counter, cache
     fail_counter += 1
     period = int(CONFIG['SERVER_PUBLISH_PERIOD'])
     if fail_counter * period > CONNECTION_FAILED_REBOOT_TIME:
         print('Maximum number of connection failures exceeded. The device will reboot.')
-        #TODO make sure that unpublished data are saved to flash!
+        cache.save_cache_to_flash()
         safety.reboot()
     else:
-        print('Connection failure (%03i), trying to reconnect to router. (Max failure time: %d sec)' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
+        print('Connection failed (%03i). Max failure time: %d sec' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
         wifi_disconnect()
         utime.sleep_ms(1000)
         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
@@ -115,42 +127,34 @@ def wifi_disconnect():
 # main application timer, executed once in a second
 # -------------------------------------------------------------------
 
-timer_presc = [0,0,0,0]
-timer_hardware_flag = False
-timer_sensor_flag = False
-timer_publish_flag = False
-timer_ntp_flag = False
-timer_gc_flag = False
-timer_meminfo_flag = False
+TIMER_SERVER_PUBLISH = 0 #period for this timer is updated once CONFIG is read
+TIMER_HARDWARE_UPDATE = 1
+TIMER_SENSOR_READ = 2
+TIMER_NTP_SYNC = 3
+TIMER_GARBAGE_COLLECTOR = 4
+TIMER_FLASH_STORAGE = 5
+timer_periods = [0, HARDWARE_UPDATE_PERIOD, SENSOR_READ_PERIOD, NTP_SYNC_PERIOD, GARBAGE_COLLECTOR_PERIOD, FLASH_STORAGE_PERIOD]
+timer_counters = [0,] * len(timer_periods)
+timer_flags = [False,] * len(timer_periods)
 def main_timer_callback(tim):
-    global timer_presc, timer_hardware_flag, timer_sensor_flag, timer_publish_flag, timer_ntp_flag, timer_gc_flag, timer_meminfo_flag
-    for i in range(len(timer_presc)):
-        timer_presc[i] += 1
-    
-    timer_hardware_flag = True
+    global timer_periods, timer_counters, timer_flags
+    for t in range(len(timer_periods)):
+        timer_counters[t] += 1
+        if timer_counters[t] >= timer_periods[t]:
+            timer_counters[t] = 0
+            timer_flags[t] = True
 
-    if timer_presc[0] >= 5:
-        timer_presc[0] = 0
-        timer_gc_flag = True
-        timer_sensor_flag = True
 
-    if timer_presc[1] >= 60:
-        timer_presc[1] = 0
-        timer_ntp_flag = True
-
-    if timer_presc[2] >= int(CONFIG['SERVER_PUBLISH_PERIOD']):
-        timer_presc[2] = 0
-        timer_publish_flag = True
-
-    if timer_presc[3] >= 10:
-        timer_presc[3] = 0
-        timer_meminfo_flag = True
+# schedule faster, manual re-connection to NTP server, when no sync is achieved after device reset
+def manual_ntp_trigger():
+    global timer_periods, timer_counters
+    value = timer_periods[TIMER_NTP_SYNC] - NTP_SYNC_PERIOD_AFTER_RESET
+    timer_counters[TIMER_NTP_SYNC] = value
 
 
 # set relay and fans according to current time
 # day_flag: True = day; False - night
 def update_hardware(day_flag):
-    # TODO add last flag to execute it on change only
     if day_flag:
         BSP.relay_on()
         BSP.fan_set(0, int(CONFIG['PWM1_DAY']))
@@ -175,6 +179,7 @@ print('\n\n### Entering Main Application ###')
 
 #reading config
 err = config_read()
+timer_periods[TIMER_SERVER_PUBLISH] = int(CONFIG['SERVER_PUBLISH_PERIOD'])
 
 #connecting to WiFi
 err, network_info = wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'))
@@ -183,6 +188,8 @@ ip = network_info[0]
 server_ip = CONFIG.get('SERVER_IP')
 server_port = int(CONFIG.get('SERVER_PORT'))
 publisher = data_publisher.DataPublisher(server_ip, server_port)
+storage = data_storage.DataStorage()
+cache = data_cache.DataCache(storage, publisher)
 
 #getting time
 err = timing.ntp_synchronize()
@@ -190,7 +197,8 @@ if err == 0:
     print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
 else:
     timing.set_time(2021, 1, 1, 12, 0, 0)
-    print("Local time set to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
+    print("Temporarily set set to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
+    manual_ntp_trigger()
 
 #initialize hardware
 BSP.init_all()
@@ -205,8 +213,8 @@ fail_counter = 0
 while True:
     try:
         #updating hardware
-        if timer_hardware_flag:
-            timer_hardware_flag = False
+        if timer_flags[TIMER_HARDWARE_UPDATE]:
+            timer_flags[TIMER_HARDWARE_UPDATE] = False
             try:
                 day_flag = timing.check_day_mode(CONFIG['LIGHT_ON'], CONFIG['LIGHT_OFF'])
                 update_hardware(day_flag)
@@ -217,46 +225,52 @@ while True:
                 print('[ERR] Hardware update failed:',e)
 
         #reading the sensor
-        if timer_sensor_flag:
-            timer_sensor_flag = False
+        if timer_flags[TIMER_SENSOR_READ]:
+            timer_flags[TIMER_SENSOR_READ] = False
             temp, hum = BSP.sensor_measure()
             print('Sensor: %04.1f*C, %04.1f%%' % (temp, hum))
         
         #sending data to the server
-        if timer_publish_flag:
-            timer_publish_flag = False
+        if timer_flags[TIMER_SERVER_PUBLISH]:
+            timer_flags[TIMER_SERVER_PUBLISH] = False
             temp, hum = BSP.sensor_get_average()
             time = timing.get_timestamp()
-            message = [time, temp, hum]
+            msg = [time, temp, hum]
             
-            success = publisher.publish([message,])
-            if not success:
-                publish_fail_counter_handler()
-            else:
+            cache.save_messages_to_ram([msg,])
+            success = cache.publish_flash_messages_and_clear() #send flash messages first, as they were created earlier
+            if success:
+                success = cache.publish_ram_messages_and_clear()
+            if success:
                 publish_fail_counter_reset()
+            else:
+                publish_fail_counter_handler()
+
+        # saving RAM cache into FLASH storage, when server is unavailable
+        if timer_flags[TIMER_FLASH_STORAGE]:
+            timer_flags[TIMER_FLASH_STORAGE] = False
+            if fail_counter > 0:
+                cache.save_cache_to_flash()
 
         #time synchronization
-        if timer_ntp_flag:
-            timer_ntp_flag = False
+        if timer_flags[TIMER_NTP_SYNC]:
+            timer_flags[TIMER_NTP_SYNC] = False
             if timing.ntp_synchronize() == 0:
                 print('NTP synchronization completed.')
+            else:
+                # manual, faster trigger when there is still no synchronization after reboot
+                if not timing.is_synchronized():
+                    manual_ntp_trigger()
 
         #garbage collector
-        if timer_gc_flag:
-            timer_gc_flag = False
+        if timer_flags[TIMER_GARBAGE_COLLECTOR]:
+            timer_flags[TIMER_GARBAGE_COLLECTOR] = False
             try:
                 gc.collect()
                 gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
-            except Exception as e:
-                print('[ERR] Garbage collector failed:',e)
-
-        #memory info
-        if timer_meminfo_flag:
-            timer_meminfo_flag = False
-            try:
                 micropython.mem_info()
             except Exception as e:
-                print('[ERR] Memory info failed:',e)
+                print('[ERR] Garbage collector failed:',e)
 
     except Exception as e:
         print('[ERR] Unhandled exception inside main loop:',e)
