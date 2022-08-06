@@ -29,8 +29,8 @@ FLASH_STORAGE_PERIOD = 60*15 # saving RAM cache into FLASH when server is unavai
 # NTP server trigger period [in s] in case when time hasn't been synchronized after reset
 NTP_SYNC_PERIOD_AFTER_RESET = 5
 
-# duration [in s] of constantly failing connections to the server, until the device reboots
-CONNECTION_FAILED_REBOOT_TIME = 60*60*3
+# number of constantly failing connections to the server, until the device reboots
+CONNECTION_FAILED_REBOOT_COUNT = 1000
 
 
 # -------------------------------------------------------------------
@@ -66,13 +66,12 @@ def config_write():
 def publish_fail_counter_handler():
     global fail_counter, cache
     fail_counter += 1
-    period = int(CONFIG['SERVER_PUBLISH_PERIOD'])
-    if fail_counter * period > CONNECTION_FAILED_REBOOT_TIME:
+    if fail_counter > CONNECTION_FAILED_REBOOT_COUNT:
         print('Maximum number of connection failures exceeded. The device will reboot.')
         cache.save_cache_to_flash()
         safety.reboot()
     else:
-        print('Connection failed (%03i). Max failure time: %d sec' % (fail_counter, CONNECTION_FAILED_REBOOT_TIME))
+        print('Connection failed (%04d/%d).' % (fail_counter, CONNECTION_FAILED_REBOOT_COUNT))
         wifi_disconnect()
         utime.sleep_ms(1000)
         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
