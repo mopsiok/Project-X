@@ -1,18 +1,44 @@
-# This file is executed after boot.py
+# This is a simplified, PC version of the code executed on ESP8266
+# Any dependencies on hardware has been removed or changed.
+# 
+# It is not pretty and might not be fully up to date, as it's a debugging tool for testing purposes only.
+# The clue is to simulate device's behaviour without need for time-consuming 
+# recompilation, reflashing and reconfiguring the device each time a change is made.
+# No unit tests for this project, sorry.
 
-#initialize watchdog pin toggling
-import safety
-safety.init_watchdog()
+#####################################################################
+#              Auxiliary functions and environment setup
+#####################################################################
 
-import gc
-import config, BSP, timing, data_publisher, data_storage, data_cache, message
-gc.collect()
-import network, machine, ubinascii, utime, micropython
-gc.collect()
+from pathlib import Path
+import os, sys, time
+
+# path to ESP8266 side implementation - needed to import shared modules
+ESP8266_SOURCES_PATH = "../sources"
+
+# Returns directory path of given file (this file used if no arguments)
+def _get_directory_path(file : str = __file__):
+    return Path(os.path.dirname(os.path.realpath(file)))
+
+# Extend python path to enable importing shared modules
+def shared_modules_init():
+    dir_path = _get_directory_path()
+    esp_modules_path = os.path.realpath(dir_path / ESP8266_SOURCES_PATH)
+    sys.path.append(esp_modules_path)
+
+shared_modules_init()
+import config, data_publisher, data_storage, data_cache, message
+import timing_mock as timing
+import bsp_mock as bsp
 
 # -------------------------------------------------------------------
 # configuration and magic numbers
 # -------------------------------------------------------------------
+
+# path to storage directory, where all data and backups stored
+STORAGE_DIRECTORY_PATH = "storage/"
+
+LOOP_DELAY_S = 0.001
 
 # configuration dictionary
 CONFIG = {} 
@@ -30,23 +56,12 @@ FLASH_STORAGE_PERIOD = 60*15 # saving RAM cache into FLASH when server is unavai
 NTP_SYNC_PERIOD_AFTER_RESET = 5
 
 # number of constantly failing connections to the server, until the device reboots
-CONNECTION_FAILED_REBOOT_COUNT = 1000
+CONNECTION_FAILED_REBOOT_COUNT = 3000
 
 
 # -------------------------------------------------------------------
 # aux functions
 # -------------------------------------------------------------------
-
-# get a string based on module's unique ID
-def aux_get_id():
-    id_str = ubinascii.hexlify(machine.unique_id())
-    return id_str.decode()
-
-
-# generate a pseudo-random string based on module's unique ID and current time
-def aux_generate_id():
-    return "%s_%04i" % (aux_get_id(), (utime.ticks_us() % 10000))
-
 
 # reads config file to global CONFIG and returns error code
 def config_read():
@@ -69,11 +84,10 @@ def publish_fail_counter_handler():
     if fail_counter > CONNECTION_FAILED_REBOOT_COUNT:
         print('Maximum number of connection failures exceeded. The device will reboot.')
         cache.save_cache_to_flash()
-        safety.reboot()
+        exit()
     else:
         print('Connection failed (%04d/%d).' % (fail_counter, CONNECTION_FAILED_REBOOT_COUNT))
         wifi_disconnect()
-        utime.sleep_ms(1000)
         wifi_connect(CONFIG.get('WIFI_SSID'), CONFIG.get('WIFI_PASS'), 5000)
 
 # reset fail counter if the connection is restored
@@ -93,33 +107,12 @@ def publish_fail_counter_reset():
 # timeout:  int, maximum timeout in ms
 # returns:  error code (0 = connected; 1 = missing credentials; 2 = timeout) and configuration info
 def wifi_connect(ssid, password, timeout=10000):
-    print('Connecting to WiFi (%s)...' % (ssid,))
-    sta = network.WLAN(network.STA_IF)
-    if (not ssid) or (not password):
-        sta.active(False)
-        return (1, sta.ifconfig())
-    
-    # disable access point mode
-    network.WLAN(network.AP_IF).active(False)
-
-    sta.active(True)
-    sta.connect(ssid, password)
-    while not sta.isconnected():
-        utime.sleep_ms(10)
-        timeout -= 10
-        if timeout <= 0:
-            print('Connection timeout.')
-            return (2, sta.ifconfig())
-    info = sta.ifconfig()
-    print('Connected:', info)
-    return (0, info)
+    return 0, ('127.0.0.1',)
 
 
 # disconnect from a WiFi network
 def wifi_disconnect():
-    print('Disconnecting from WiFi...')
-    sta = network.WLAN(network.STA_IF)
-    sta.disconnect()
+    pass
 
 
 # -------------------------------------------------------------------
@@ -154,20 +147,7 @@ def manual_ntp_trigger():
 # set relay and fans according to current time
 # day_flag: True = day; False - night
 def update_hardware(day_flag):
-    if day_flag:
-        BSP.relay_on()
-        BSP.fan_set(0, int(CONFIG['PWM1_DAY']))
-        BSP.fan_set(1, int(CONFIG['PWM2_DAY']))
-        BSP.fan_set(2, int(CONFIG['PWM3_DAY']))
-        BSP.fan_set(3, int(CONFIG['PWM4_DAY']))
-    else:
-        BSP.relay_off()
-        BSP.fan_set(0, int(CONFIG['PWM1_NIGHT']))
-        BSP.fan_set(1, int(CONFIG['PWM2_NIGHT']))
-        BSP.fan_set(2, int(CONFIG['PWM3_NIGHT']))
-        BSP.fan_set(3, int(CONFIG['PWM4_NIGHT']))
-
-
+    pass
 
 
 # -------------------------------------------------------------------
@@ -187,7 +167,7 @@ ip = network_info[0]
 server_ip = CONFIG.get('SERVER_IP')
 server_port = int(CONFIG.get('SERVER_PORT'))
 publisher = data_publisher.DataPublisher(server_ip, server_port)
-storage = data_storage.DataStorage()
+storage = data_storage.DataStorage(False, STORAGE_DIRECTORY_PATH) #this is different in ESP implementation
 cache = data_cache.DataCache(storage, publisher)
 
 #getting time
@@ -195,22 +175,16 @@ err = timing.ntp_synchronize()
 if err == 0:
     print("Synchronized to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
 else:
-    timing.set_time(2021, 1, 1, 12, 0, 0)
     print("Temporarily set set to %i.%02i.%02i %02i:%02i:%02i" % timing.get_datetime())
     manual_ntp_trigger()
-
-#initialize hardware
-BSP.init_all()
-
-#set up a 1Hz timer for main application
-timer = machine.Timer(-1)
-timer.init(period=1000, mode=machine.Timer.PERIODIC, callback=main_timer_callback)
 
 #used to restart WiFi or reboot device if constantly failed to publish messages
 fail_counter = 0
 
 while True:
     try:
+        main_timer_callback(None)
+
         #updating hardware
         if timer_flags[TIMER_HARDWARE_UPDATE]:
             timer_flags[TIMER_HARDWARE_UPDATE] = False
@@ -226,15 +200,15 @@ while True:
         #reading the sensor
         if timer_flags[TIMER_SENSOR_READ]:
             timer_flags[TIMER_SENSOR_READ] = False
-            temp, hum = BSP.sensor_measure()
+            temp, hum = bsp.sensor_measure()
             print('Sensor: %04.1f*C, %04.1f%%' % (temp, hum))
         
         #sending data to the server
         if timer_flags[TIMER_SERVER_PUBLISH]:
             timer_flags[TIMER_SERVER_PUBLISH] = False
-            temp, hum = BSP.sensor_get_average()
-            time = timing.get_timestamp()
-            msg = [time, temp, hum]
+            temp, hum = bsp.sensor_get_average()
+            time_ = timing.get_timestamp()
+            msg = [time_, temp, hum]
             
             cache.save_messages_to_ram([msg,])
             success = cache.publish_flash_messages_and_clear() #send flash messages first, as they were created earlier
@@ -263,18 +237,12 @@ while True:
 
         #garbage collector
         if timer_flags[TIMER_GARBAGE_COLLECTOR]:
-            timer_flags[TIMER_GARBAGE_COLLECTOR] = False
-            try:
-                gc.collect()
-                gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
-                micropython.mem_info()
-            except Exception as e:
-                print('[ERR] Garbage collector failed:',e)
+            pass
 
     except Exception as e:
         print('[ERR] Unhandled exception inside main loop:',e)
 
-    utime.sleep_ms(1) #for background tasks to run
+    time.sleep(LOOP_DELAY_S) #for background tasks to run
 
 #unhandled error occured - rebooting
 print('[ERR] Gone outside of main loop!')

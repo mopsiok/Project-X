@@ -12,6 +12,15 @@
             "args": ["-s", "10"],
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Test client",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "cwd": "${workspaceFolder}/test_client",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
