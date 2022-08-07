@@ -45,6 +45,8 @@ from data_storage import DataStorage
 
 # Measurement Manager modules
 import helpers
+helpers.addInternalFoldersToPath()
+
 from Manager import Manager
 from Logger import Logger
 from GenericPlot import GenericPlot
