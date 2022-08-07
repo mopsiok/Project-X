@@ -68,7 +68,6 @@ def publish_fail_counter_handler():
     fail_counter += 1
     if fail_counter > CONNECTION_FAILED_REBOOT_COUNT:
         print('Maximum number of connection failures exceeded. The device will reboot.')
-        cache.save_cache_to_flash()
         safety.reboot()
     else:
         print('Connection failed (%04d/%d).' % (fail_counter, CONNECTION_FAILED_REBOOT_COUNT))
@@ -189,6 +188,9 @@ server_port = int(CONFIG.get('SERVER_PORT'))
 publisher = data_publisher.DataPublisher(server_ip, server_port)
 storage = data_storage.DataStorage()
 cache = data_cache.DataCache(storage, publisher)
+
+#registering pre-reboot function: saving RAM measurements to FLASH
+safety.init_reboot_pre_func(cache.save_cache_to_flash)
 
 #getting time
 err = timing.ntp_synchronize()
