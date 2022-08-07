@@ -44,7 +44,26 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 - finished main application
 - added install and config instructions
 
-## Environmental setup
+
+## Using TCP server
+
+```bash
+# As a python script
+cd server
+python3 main.py
+
+# Running in docker
+docker-compose up
+docker ps
+```
+
+Storage data is collected in `binaries/storage.bin` file, and can be displayed using plotter script:
+```bash
+cd plotter
+python3 main.py -d 10
+```
+
+## Device environmental setup
 
 As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe one way of doing it.
 

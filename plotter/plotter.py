@@ -20,7 +20,7 @@ from GenericPlotBase import *
 #####################################################################
 
 # path to storage directory, where all ProjectX data and backups are stored
-STORAGE_DIRECTORY_PATH = "../server/storage"
+STORAGE_DIRECTORY_PATH = "../binaries"
 
 SECONDS_IN_DAY = 60*60*24
 

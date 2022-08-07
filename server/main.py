@@ -7,7 +7,7 @@ import os, sys
 #####################################################################
 
 # path to storage directory, where all data and backups stored
-STORAGE_DIRECTORY_PATH = "storage/"
+STORAGE_DIRECTORY_PATH = "../binaries/"
 
 # TCP port to listen for new data
 SERVER_PORT = 9999
