@@ -60,8 +60,19 @@ def init_watchdog(clear_periods = DEFAULT_WATCHDOG_TIMER_PERIODS_PER_CLEAR):
 # safe reboot
 # -------------------------------------------------------------------
 
-# reboot the board after setting important pins to default states
+pre_reboot_func = None
+
+# Initialize pre-reboot function called before system reboot.
+def init_reboot_pre_func(func = None):
+    global pre_reboot_func 
+    pre_reboot_func = func
+
+# after setting important pins to default states, peform optional pre-reboot 
+# function, then reboot the system.
 def reboot():
+    global pre_reboot_func
+    if pre_reboot_func != None:
+        pre_reboot_func()
     print('Performing safe reboot...')
     machine.Pin(GPIO0_PIN, machine.Pin.OUT, value=1)
     machine.Pin(GPIO2_PIN, machine.Pin.OUT, value=1)
