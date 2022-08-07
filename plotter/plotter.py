@@ -63,13 +63,16 @@ class ProjectXPlot(GenericPlotBase):
 class Plotter():
     def __init__(self, start_date: int = None, 
                  end_date: int = None, 
-                 duration: float = 1.0):
+                 duration: float = 7.0):
         try:
             period = round(duration * SECONDS_IN_DAY)
+            if end_date == None:
+                if start_date == None:
+                    end_date = int(time.time())
+                else:
+                    end_date = start_date + period
             if start_date == None:
                 start_date = end_date - period
-            if end_date == None:
-                end_date = start_date + period
         except:
             raise Exception(PlotterExceptions.WRONG_ARGS)
 

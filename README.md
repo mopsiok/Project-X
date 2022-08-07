@@ -58,9 +58,11 @@ docker ps
 ```
 
 Storage data is collected in `binaries/storage.bin` file, and can be displayed using plotter script:
+
 ```bash
 cd plotter
 python3 main.py -d 10
+python3 main.py --help
 ```
 
 ## Device environmental setup
