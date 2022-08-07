@@ -6,7 +6,7 @@ Micropython project for GPIO control and atmospheric measurements over WiFi netw
 
 ## Features
 * easy configuration using webserver
-* publishing measurements in Thingspeak
+* simple TCP client-server communication with client-side data cache in case of server absence
 * NTP time synchronization
 * time controlled relay switch and PWM outputs
 
@@ -20,8 +20,11 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ## Changelog
 
-### under development
+### v3.0
 
+- changed problematic MQTT communication into simple TCP client-server architecture
+- client-side data caching in case of server absence with efficient FLASH usage
+- simple matplotlib preview of server data
 - remote development improvements (added scripts and VSCode tasks)
 
 ### v2.0
