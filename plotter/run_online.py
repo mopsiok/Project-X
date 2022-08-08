@@ -6,6 +6,7 @@
 
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 import time
@@ -83,21 +84,46 @@ def _is_summertime():
 
 def create_figure():
     data = create_dateframe()
-    # TODO to be changed:
-    # - legend description and position
-    # - second Y axis
-    # - plot size/ratio
+
     fig = make_subplots(specs=[[{"secondary_y": True}]])
-    return px.line(x=data["timestamp"], 
-                   y=[data["temperature"], data["humidity"]])
+
+    fig.add_trace(go.Scatter(
+        name="Temperature",
+        mode="lines", x=data["timestamp"], y=data["temperature"]
+        ), secondary_y=False
+        )
+
+    fig.add_trace(go.Scatter(
+        name="Humidity",
+        mode="lines", x=data["timestamp"], y=data["humidity"]
+        ), secondary_y=True
+        )
+
+    fig.update_xaxes(title_text="Time")
+    fig.update_yaxes(title_text="Temperature [*C]", secondary_y=False)
+    fig.update_yaxes(title_text="Humidity [% RH]", secondary_y=True)
+
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+            ),
+        # autosize=False,
+        # width=800,
+        # height=700,
+        )
+
+    return fig
 
 app = Dash(__name__)
 
 app.layout = html.Div(style={'color': '#333333', 'font-family': 'Calibri', 'textAlign': 'center'}, children=[
-    html.H2('Project X'),
-    html.Div('Inner sensor measurements'),
+    html.H1('Project X'),
     dcc.Graph(
-        id = "measurements",
+        id = "inner-sensor",
         figure = create_figure()
     ),
     dcc.Interval(
@@ -107,7 +133,7 @@ app.layout = html.Div(style={'color': '#333333', 'font-family': 'Calibri', 'text
     ),
 ])
 
-@app.callback(Output("measurements", "figure"),
+@app.callback(Output("inner-sensor", "figure"),
         [Input("interval", "n_intervals")])
 def update_plot_callback(n_intervals):
     return create_figure()
