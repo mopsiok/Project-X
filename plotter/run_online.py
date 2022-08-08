@@ -85,6 +85,10 @@ def _is_summertime():
 def create_figure():
     data = create_dateframe()
 
+    TEMP_COLOR = '#636EFA'
+    HUM_COLOR = '#EF553B'
+    PLOT_HEIGHT = 700
+
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(go.Scatter(
@@ -99,21 +103,55 @@ def create_figure():
         ), secondary_y=True
         )
 
-    fig.update_xaxes(title_text="Time")
-    fig.update_yaxes(title_text="Temperature [*C]", secondary_y=False)
-    fig.update_yaxes(title_text="Humidity [% RH]", secondary_y=True)
+    fig.update_xaxes(
+        title_text = "Time",
+        showline = True,
+        linewidth = 2,
+        linecolor = 'black',
+        rangeslider_visible = True,
+        rangeselector = dict(
+            buttons = list([
+                dict(count=1, label="1d", step="day", stepmode="backward"),
+                dict(count=3, label="3d", step="day", stepmode="backward"),
+                dict(count=7, label="1w", step="day", stepmode="backward"),
+                dict(count=14, label="2w", step="day", stepmode="backward"),
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(step="all")
+                ])
+            )
+        )
+
+    fig.update_yaxes(
+        title_text="Temperature [*C]", 
+        secondary_y=False,
+        color = TEMP_COLOR,
+        gridcolor = TEMP_COLOR,
+        linecolor = 'black',
+        showgrid = False,
+        showline = True,
+        linewidth = 2,
+        )
+
+    fig.update_yaxes(
+        title_text="Humidity [% RH]", 
+        secondary_y=True,
+        color = HUM_COLOR,
+        gridcolor = HUM_COLOR,
+        linecolor = 'black',
+        showgrid = False,
+        showline = True,
+        linewidth = 2,
+        )
 
     fig.update_layout(
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
+        legend = dict(
+            orientation = "h",
+            yanchor = "bottom",
+            y = 1.02,
+            xanchor = "right",
+            x = 0.95
             ),
-        # autosize=False,
-        # width=800,
-        # height=700,
+        height = PLOT_HEIGHT,
         )
 
     return fig
