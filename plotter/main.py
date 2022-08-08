@@ -1,5 +1,5 @@
 import argparse, traceback
-from plotter import Plotter, PlotterExceptions
+from plotter_local import Plotter, PlotterExceptions
 
 DESCRIPTION = "Plot data from TCP server data storage. Use -s, -e, -d flags to specify preview window range. " \
     "If -d only is specified, it is assumed that the end date is now. " \
