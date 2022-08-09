@@ -24,9 +24,13 @@ from data_storage import DataStorage
 # path to storage directory, where all ProjectX data and backups are stored
 STORAGE_DIRECTORY_PATH = "../binaries"
 
+SERVER_IP = '0.0.0.0' # needed for external connections
 SERVER_PORT = 9000
 
 REFRESH_INTERVAL = 30000
+
+TEMPERATURE_UNIT = u"\u00b0C"
+HUMIDITY_UNIT = u"% RH"
 
 
 #####################################################################
@@ -91,16 +95,26 @@ def create_figure():
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    fig.add_trace(go.Scatter(
-        name="Temperature",
-        mode="lines", x=data["timestamp"], y=data["temperature"]
-        ), secondary_y=False
+    fig.add_trace(
+        go.Scatter(
+            name = "Temperature",
+            x=data["timestamp"], y=data["temperature"],
+            hovertemplate = "<b>%{y:.1f}" + TEMPERATURE_UNIT + "</b>",
+            ), 
+        secondary_y = False,
         )
 
-    fig.add_trace(go.Scatter(
-        name="Humidity",
-        mode="lines", x=data["timestamp"], y=data["humidity"]
-        ), secondary_y=True
+    fig.add_trace(
+        go.Scatter(
+            name = "Humidity",
+            x=data["timestamp"], y=data["humidity"],
+            hovertemplate = "<b>%{y:.0f}" + HUMIDITY_UNIT + "</b>",
+            ), 
+        secondary_y = True,
+        )
+
+    fig.update_layout(
+        hovermode = "x unified",
         )
 
     fig.update_xaxes(
@@ -122,7 +136,7 @@ def create_figure():
         )
 
     fig.update_yaxes(
-        title_text="Temperature [*C]", 
+        title_text=f"Temperature [{TEMPERATURE_UNIT}]", 
         secondary_y=False,
         color = TEMP_COLOR,
         gridcolor = TEMP_COLOR,
@@ -133,7 +147,7 @@ def create_figure():
         )
 
     fig.update_yaxes(
-        title_text="Humidity [% RH]", 
+        title_text=f"Humidity [{HUMIDITY_UNIT}]", 
         secondary_y=True,
         color = HUM_COLOR,
         gridcolor = HUM_COLOR,
@@ -177,4 +191,4 @@ def update_plot_callback(n_intervals):
     return create_figure()
 
 if __name__ == '__main__':
-    app.run_server(port = SERVER_PORT)
+    app.run_server(host = SERVER_IP, port = SERVER_PORT)

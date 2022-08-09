@@ -57,23 +57,17 @@ docker-compose up -d
 docker ps
 ```
 
-Storage data is collected in `binaries/storage.bin` file.
+Storage data is collected in `binaries/storage.bin` file. It can be displayed in two ways:
 
-## Displaying data
-
-Storage can be displayed in two ways:
-
-- running Dash web server with interactive Plotly graph and going to [http://localhost:9000](http://localhost:9000)
-    ```bash
-    cd plotter
-    python3 run_online.py
-    ```
-
+- by opening interactive Dash web server (when docker is running):
+  [http://localhost:9000](http://localhost:9000)
+  <br>
 - using static matplotlib graph:
     ```bash
     cd plotter
-    python3 main.py # use --help for extra options
+    python3 main.py
     ```
+    this visualizer is in PoC stage. You can use `--help` for extra options, but TBH they aren't even implemented.
 
 ## Environment setup for ESP8266
 
