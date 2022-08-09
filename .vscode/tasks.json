@@ -17,7 +17,6 @@
             },
             "presentation": {
                 "panel": "shared"
-                //TODO check
             }
         },
         {
@@ -30,7 +29,6 @@
             },
             "presentation": {
                 "panel": "shared"
-                //TODO check
             }
         },
     ],

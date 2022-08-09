@@ -52,22 +52,32 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 cd server
 python3 main.py
 
-# Running in docker
-docker-compose up
+# With docker, as a service
+docker-compose up -d
 docker ps
 ```
 
-Storage data is collected in `binaries/storage.bin` file, and can be displayed using plotter script:
+Storage data is collected in `binaries/storage.bin` file.
 
-```bash
-cd plotter
-python3 main.py -d 10
-python3 main.py --help
-```
+## Displaying data
 
-## Device environmental setup
+Storage can be displayed in two ways:
 
-As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe one way of doing it.
+- running Dash web server with interactive Plotly graph and going to [http://localhost:9000](http://localhost:9000)
+    ```bash
+    cd plotter
+    python3 run_online.py
+    ```
+
+- using static matplotlib graph:
+    ```bash
+    cd plotter
+    python3 main.py # use --help for extra options
+    ```
+
+## Environment setup for ESP8266
+
+As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe some starting point, but small changes might be needed.
 
 1. Install any linux distribution (Ubuntu 20.04.2 LTS on a virtual machine is used in this example)
 2. Pull the repo on the development machine
