@@ -1,3 +1,6 @@
 [submodule "external/measurement_manager"]
 	path = external/measurement_manager
 	url = git@gitlab.com:mopsiok/measurement_manager.git
+[submodule "external/webrepl"]
+	path = external/webrepl
+	url = git@github.com:micropython/webrepl.git

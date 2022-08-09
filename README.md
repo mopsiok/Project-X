@@ -133,7 +133,7 @@ After the build is finished, output binary file is copied to `binaries` director
     SSID: PROJECT_X
     PASS: projectx
     ```
-2. Open webREPL page (`utils/webrepl-master/webrepl.html`) and connect to the device:
+2. Open webREPL page (`external/webrepl/webrepl.html`) and connect to the device:
     ```
     HOST: ws://192.168.4.1:8266/
     PASS: projectx
