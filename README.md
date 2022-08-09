@@ -20,6 +20,10 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ## Changelog
 
+### v3.1
+- added docker runner for data receive server
+- added interactive web visualizer for collected data
+
 ### v3.0
 
 - changed problematic MQTT communication into simple TCP client-server architecture
