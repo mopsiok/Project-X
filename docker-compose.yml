@@ -1,0 +1,21 @@
+version: '3'
+services:
+  tcp_server:
+    build: .
+    working_dir: /usr/src/app/server
+    command: python3 main.py
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "9999:9999"
+    restart: always
+  
+  visualizer:
+    build: .
+    working_dir: /usr/src/app/plotter
+    command: python3 run_online.py
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "9000:9000"
+    restart: always

@@ -1,55 +1,59 @@
 from enum import Enum
 from pathlib import Path
-import os, sys, time
+import time
+import matplotlib.dates as md
+import datetime as dt
+import environment
+environment.add_internal_sources_to_path()
 
-#####################################################################
-#                           Config
-#####################################################################
+import message
+from data_storage import DataStorage
 
-# path to storage directory, where all ProjectX data and backups are stored
-STORAGE_DIRECTORY_PATH = "../server/storage"
+import managerHelpers
+from Manager import Manager
+from Logger import Logger
+from GenericPlotBase import *
 
 
 #####################################################################
 #                    Not config, don't change
 #####################################################################
 
-# path to ESP8266 side implementation - needed to import shared modules
-ESP8266_SOURCES_PATH = "../sources"
-
-# path to Measurement Manager application directory - used to plot data
-GENERIC_PLOTTER_SOURCES = "../external/measurement_manager/app"
+# path to storage directory, where all ProjectX data and backups are stored
+STORAGE_DIRECTORY_PATH = "../binaries"
 
 SECONDS_IN_DAY = 60*60*24
 
 
 #####################################################################
-#              Auxiliary functions and environment setup
+#                    Project X Plot class
 #####################################################################
 
-# Returns directory path of given file (this file used if no arguments)
-def _get_directory_path(file : str = __file__):
-    return Path(os.path.dirname(os.path.realpath(file)))
+class ProjectXPlot(GenericPlotBase):
+    def __init__(self, id: int, loggerInstance: any):
+        """Generic Plot device initializtion."""
+        GenericPlotBase.__init__(self, "Project X", id, loggerInstance, 
+                sensorInstance = None, channelsCount = 2,
+                runConfiguration = False)
 
-# Extend python path to enable importing shared modules
-def shared_modules_init():
-    dir_path = _get_directory_path()
-    esp_modules_path = os.path.realpath(dir_path / ESP8266_SOURCES_PATH)
-    plotter_path = os.path.realpath(dir_path / GENERIC_PLOTTER_SOURCES)
-    sys.path.append(esp_modules_path)
-    sys.path.append(plotter_path)
+    def configureAll(self):
+        plotSize = PlotSize()
+        plotMargin = PlotMargin()
+        self.configPlot("Project X", rowCount = 2, colCount = 1, size = plotSize, margin = plotMargin)
 
-shared_modules_init()
-import message
-from data_storage import DataStorage
+        xLabelFormatter = md.DateFormatter('%d.%m %H:%M')
+        xValueFormatter = dt.datetime.fromtimestamp
+        tempConfig = SubplotConfig(xLabel = "Timestamp", yLabel = "Temperature [*C]",
+            xLabelFormatter = xLabelFormatter, xValueFormatter = xValueFormatter,
+            serie = SubplotSerie())
+        tempSubplot = self.addSubplot(tempConfig)
 
-# Measurement Manager modules
-import helpers
-helpers.addInternalFoldersToPath()
+        humConfig = SubplotConfig(xLabel = "Timestamp", yLabel = "Humidity [% RH]",
+            xLabelFormatter = xLabelFormatter, xValueFormatter = xValueFormatter,
+            serie = SubplotSerie())
+        humSubplot = self.addSubplot(humConfig)
 
-from Manager import Manager
-from Logger import Logger
-from GenericPlot import GenericPlot
+        return tempSubplot, humSubplot
 
 
 #####################################################################
@@ -57,15 +61,18 @@ from GenericPlot import GenericPlot
 #####################################################################
 
 class Plotter():
-    def __init__(self,  start_date: int = None, 
-                        end_date: int = None, 
-                        duration: float = 1.0):
+    def __init__(self, start_date: int = None, 
+                 end_date: int = None, 
+                 duration: float = 7.0):
         try:
             period = round(duration * SECONDS_IN_DAY)
+            if end_date == None:
+                if start_date == None:
+                    end_date = int(time.time())
+                else:
+                    end_date = start_date + period
             if start_date == None:
                 start_date = end_date - period
-            if end_date == None:
-                end_date = start_date + period
         except:
             raise Exception(PlotterExceptions.WRONG_ARGS)
 
@@ -81,7 +88,7 @@ class Plotter():
 
 
     def load_data_from_storage(self):
-        dir_path = _get_directory_path() / STORAGE_DIRECTORY_PATH
+        dir_path = environment.get_directory_path() / STORAGE_DIRECTORY_PATH
         storage = DataStorage(False, dir_path)
         data = storage.read_all_data()
         data = message.parse_messages(data)
@@ -93,9 +100,11 @@ class Plotter():
 
     def plot_data(self):
         self._prepare_manager()
-
         time_list, temp_list, hum_list = self._reshape_data(self.messages_list)
-        self.plot.show_test_plot(time_list, temp_list, hum_list)
+        tempSubplot, humSubplot = self.plot.configureAll()
+        self.plot.formatAppendData(time_list, temp_list, tempSubplot)
+        self.plot.formatAppendData(time_list, hum_list, humSubplot)
+        self.plot.show()
         self._run_manager()
 
 
@@ -104,8 +113,7 @@ class Plotter():
         output_dir = Path('logs') / time.strftime('%Y_%m_%d__%H_%M_%S')
         self.logger = Logger(output_dir / 'system.log')
         self.manager = Manager(output_dir, self.logger)
-        self.plot = GenericPlot("Project X", 0, self.logger, self)
-        
+        self.plot = ProjectXPlot(0, self.logger)
         self.manager.registerObject(self.plot)
 
 
@@ -113,7 +121,7 @@ class Plotter():
     def _run_manager(self):
         self.logger.info("STARTING MANAGER...")
         if self.manager.start():
-            helpers.waitToFinish(2)
+            managerHelpers.waitToFinish(1)
             self.logger.info("STOPPING MANAGER...")
             self.manager.stop()
 

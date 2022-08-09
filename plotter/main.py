@@ -1,7 +1,9 @@
 import argparse, traceback
-from plotter import Plotter, PlotterExceptions
+from plotter_local import Plotter, PlotterExceptions
 
-DESCRIPTION = "Plot data from TCP server data storage. Use any two of -s, -e, -d flags to specify preview window range."
+DESCRIPTION = "Plot data from TCP server data storage. Use -s, -e, -d flags to specify preview window range. " \
+    "If -d only is specified, it is assumed that the end date is now. " \
+    "If no arguments is specified, it is assumed that the window is 7 days back from now."
 
 def main():
     def positive_int(value):

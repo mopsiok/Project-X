@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Plotter",
+            "name": "Static plotter",
             "type": "python",
             "request": "launch",
-            "program": "plotter/main.py",
-            "args": ["-s", "10"],
+            "program": "main.py",
+            "cwd": "${workspaceFolder}/plotter",
             "console": "integratedTerminal",
             "justMyCode": true
         },

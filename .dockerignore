@@ -1,0 +1,14 @@
+.git
+.vscode
+binaries
+external
+scripts
+utils
+
+.gitignore
+.gitmodules
+Dockerfile*
+docker-compose*
+*.jpg
+*.md
+LICENSE

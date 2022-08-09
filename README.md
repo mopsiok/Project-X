@@ -20,6 +20,10 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ## Changelog
 
+### v3.1
+- added docker runner for data receive server
+- added interactive web visualizer for collected data
+
 ### v3.0
 
 - changed problematic MQTT communication into simple TCP client-server architecture
@@ -44,9 +48,34 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 - finished main application
 - added install and config instructions
 
-## Environmental setup
 
-As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe one way of doing it.
+## Using TCP server
+
+```bash
+# As a python script
+cd server
+python3 main.py
+
+# With docker, as a service
+docker-compose up -d
+docker ps
+```
+
+Storage data is collected in `binaries/storage.bin` file. It can be displayed in two ways:
+
+- by opening interactive Dash web server (when docker is running):
+  [http://localhost:9000](http://localhost:9000)
+  <br>
+- using static matplotlib graph:
+    ```bash
+    cd plotter
+    python3 main.py
+    ```
+    this visualizer is in PoC stage. You can use `--help` for extra options, but TBH they aren't even implemented.
+
+## Environment setup for ESP8266
+
+As the project is quite demanding, it is recommended to precompile micropython scripts into frozen bytecode. The following chapters describe some starting point, but small changes might be needed.
 
 1. Install any linux distribution (Ubuntu 20.04.2 LTS on a virtual machine is used in this example)
 2. Pull the repo on the development machine

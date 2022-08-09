@@ -1,0 +1,3 @@
+dash
+pandas
+#matplotlib # this is used for local plotter only, no need to install it in docker
