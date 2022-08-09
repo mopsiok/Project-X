@@ -2,10 +2,13 @@
 
 Micropython project for GPIO control and atmospheric measurements over WiFi network.
 
-![Project X](Project_X_small.jpg)
+![Project X](utils/img/Project_X_small.jpg)
+
+![Dash based data visualizer](utils/img/dash_visualizer.png)
 
 ## Features
 * easy configuration using webserver
+* interactive web visualizer for collected data
 * simple TCP client-server communication with client-side data cache in case of server absence
 * NTP time synchronization
 * time controlled relay switch and PWM outputs
@@ -22,7 +25,7 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ### v3.1
 - added docker runner for data receive server
-- added interactive web visualizer for collected data
+- added interactive dash-based visualizer
 
 ### v3.0
 
