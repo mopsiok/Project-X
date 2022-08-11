@@ -25,7 +25,16 @@ class DataStorage():
     def append_data(self, serialized_data: bytes):
         with open(self.storage_file_path, 'ab+') as storage_file:
             storage_file.write(serialized_data)
-    
+
+    # clears the storage file and appends serialized data
+    def clear_write_data(self, serialized_data: bytes):
+        with open(self.storage_file_path, 'wb') as storage_file:
+            storage_file.write(serialized_data)
+
+    # clears all data from the storage file
+    def clear_data(self):
+        open(self.storage_file_path, 'w').close() # no "with" -> for ESP8266 compatibility
+
     # returns all data read from the storage file
     def read_all_data(self):
         with open(self.storage_file_path, 'rb') as storage_file:
@@ -38,10 +47,6 @@ class DataStorage():
             storage_file.seek(start_index)
             raw_data = storage_file.read(bytes_count)
         return raw_data
-
-    # clears all data from the storage file
-    def clear_data(self):
-        open(self.storage_file_path, 'w').close()
 
     # returns size of the storage file in bytes
     def check_storage_size(self):

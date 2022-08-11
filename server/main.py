@@ -22,6 +22,8 @@ ESP8266_SOURCES_PATH = "../sources"
 
 SERVER_HOST = "0.0.0.0"
 
+TIMESTAMP_INDEX = 0
+
 
 #####################################################################
 #              Auxiliary functions and environment setup
@@ -50,23 +52,55 @@ import data_cache
 storage = None
 cache = None
 
+def get_sample_time(sample: list):
+    return sample[TIMESTAMP_INDEX]
+
+def is_packet_misplaced(received_messages: list):
+    if (len(cache.cache) == 0) or (len(received_messages) == 0):
+        return False
+
+    current_timestamp = get_sample_time(received_messages[0])
+    last_timestamp = get_sample_time(cache.cache[-1])
+    return current_timestamp < last_timestamp
+
+# in case of receiving packets in wrong order, sort the whole cache and return the result
+def repair_misplaced_samples():
+    fixed = sorted(cache.cache, key=lambda sample: sample[TIMESTAMP_INDEX])
+    return fixed
+
+# duplicated data rejection based on ram cache
+def remove_duplicated_samples(received_messages: list):
+    checked_messages = []
+    for msg in received_messages:
+        if not msg in cache.cache:
+            checked_messages.append(msg)
+    return checked_messages
+
+def serialize_samples(messages_list: list):
+    return b''.join(message.serialize(msg) for msg in messages_list)
+
+
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
+        global cache
+
         ip_address = self.client_address[0]
         payload = message.receive_packet(self.request.recv)
         messages = message.parse_messages(payload)
 
-        # duplicated data rejection based on ram cache
-        messages_checked = []
-        for msg in messages:
-            if not msg in cache.cache:
-                messages_checked.append(msg)
-        payload_checked = b''.join(
-            message.serialize(msg) for msg in messages_checked)
-        
-        # updating cache and storage
+        messages_checked = remove_duplicated_samples(messages)
+        is_misplaced = is_packet_misplaced(messages_checked)
         cache.save_messages_to_ram(messages_checked)
-        storage.append_data(payload_checked)
+        
+        if is_misplaced:
+            print("[WARN] Received misplaced packet, repairing...")
+            messages_fixed = repair_misplaced_samples()
+            cache.cache = messages_fixed
+            serialized = serialize_samples(messages_fixed)
+            storage.clear_write_data(serialized)
+        else:
+            serialized = serialize_samples(messages_checked)
+            storage.append_data(serialized)
 
         for count, msg in enumerate(messages_checked):
             print(f"{message.format(msg)}    [{ip_address}]  [{count+1:2d}]")

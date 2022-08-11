@@ -21,6 +21,15 @@
             "cwd": "${workspaceFolder}/test_client",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Server",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "cwd": "${workspaceFolder}/server",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
