@@ -12,6 +12,9 @@ STORAGE_DIRECTORY_PATH = "../binaries/"
 # TCP port to listen for new data
 SERVER_PORT = 9999
 
+# entry point for any manual repair - for emergencies only
+MANUAL_REPAIR = False
+
 
 #####################################################################
 #                    Not config, don't change
@@ -79,6 +82,10 @@ def remove_duplicated_samples(received_messages: list):
 def serialize_samples(messages_list: list):
     return b''.join(message.serialize(msg) for msg in messages_list)
 
+def print_storage_info(messages_list: list):
+    print(f"Stored messages count: {len(messages_list)}")
+    if len(messages_list) > 0:
+        print(f"Last message:\n{message.format(messages_list[-1])}\n")
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -116,13 +123,32 @@ def main():
     data = storage.read_all_data()
     data = message.parse_messages(data)
     cache.save_messages_to_ram(data)
-    print(f"Stored messages count: {len(data)}")
-    if len(data) > 0:
-        print(f"Last message:\n{message.format(data[-1])}\n")
+
+    if MANUAL_REPAIR:
+        manual_storage_repair(data)
+        exit()
+
+    print_storage_info(data)
     del data
 
     with socketserver.TCPServer((SERVER_HOST, SERVER_PORT), MyTCPHandler) as server:
         server.serve_forever()
+
+
+def manual_storage_repair(messages_list: list):
+    global storage
+    
+    print(f"Executing manual storage repair\n")
+
+    # repair this shit here, depending on the problem
+    # fixed = []
+    # for msg in messages_list:
+    #     if get_sample_time(msg) != 0:
+    #         fixed.append(msg)
+    #     else:
+    #         print(f"Removing: {msg}")
+    # serialized = serialize_samples(fixed)
+    # storage.clear_write_data(serialized)
 
 
 if __name__ == "__main__":
