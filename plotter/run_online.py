@@ -15,6 +15,7 @@ import environment
 environment.add_internal_sources_to_path()
 import message
 from data_storage import DataStorage
+import DataProcessing
 
 
 #####################################################################
@@ -27,11 +28,25 @@ STORAGE_DIRECTORY_PATH = "../binaries"
 SERVER_IP = '0.0.0.0' # needed for external connections
 SERVER_PORT = 9000
 
-REFRESH_INTERVAL = 30000
+REFRESH_INTERVAL = 5*60*1000            # plot refresh rate [in seconds]
 
+TEMPERATURE_COLOR = '#AA2015'
+TEMPERATURE_FILTERED_COLOR = '#EF553B'
 TEMPERATURE_UNIT = u"\u00b0C"
+
+HUMIDITY_COLOR = '#3030AA'
+HUMIDITY_FILTERED_COLOR = '#636EFA'
 HUMIDITY_UNIT = u"% RH"
 
+PLOT_HEIGHT = 750
+PLOT_LINE_WIDTH = 1
+PLOT_FILTERED_LINE_WIDTH = 2
+
+RESAMPLING_STEP = 30                    # requested time step in resampled data [in seconds]
+LOW_PASS_CUTOFF_PERIOD = 1*60*60        # low pass filter cutoff period [in seconds]
+LOW_PASS_ORDER = 3                      # low pass filter order
+
+SECONDS_IN_HOUR = 3600.0
 
 #####################################################################
 #                       Data preparation
@@ -42,13 +57,20 @@ def create_dateframe():
                          "temperature": [],
                          "humidity": []})
     messages_list = _read_data_from_storage()
-    data["timestamp"], data["temperature"], data["humidity"] = _reshape_data(messages_list)
+    
+    time_raw, temp_raw, hum_raw = _reshape_data(messages_list)
+
+    time_sampled, temp_sampled = DataProcessing.linearResampling(time_raw, temp_raw, RESAMPLING_STEP)
+    _, hum_sampled = DataProcessing.linearResampling(time_raw, hum_raw, RESAMPLING_STEP)
+
+    data["timestamp"], data["temperature"], data["humidity"] = time_sampled, temp_sampled, hum_sampled
+    data["temperature_filtered"] = DataProcessing.lowPassFilter(temp_sampled, RESAMPLING_STEP, 1.0/LOW_PASS_CUTOFF_PERIOD, LOW_PASS_ORDER)
+    data["humidity_filtered"] = DataProcessing.lowPassFilter(hum_sampled, RESAMPLING_STEP, 1.0/LOW_PASS_CUTOFF_PERIOD, LOW_PASS_ORDER)
 
     # not very smart timezone correction, but I had problems with tz_localize
-    ONE_HOUR = 3600
-    timezone_offset = ONE_HOUR          #Central European Time (UTC+1)
+    timezone_offset = SECONDS_IN_HOUR          #Central European Time (UTC+1)
     if _is_summertime():
-        timezone_offset += ONE_HOUR     #Central European Summer Time (UTC+2)
+        timezone_offset += SECONDS_IN_HOUR     #Central European Summer Time (UTC+2)
     data["timestamp"] = [timestamp + timezone_offset for timestamp in data["timestamp"]]
 
     data["timestamp"] = pd.to_datetime(data["timestamp"], unit='s')
@@ -89,19 +111,20 @@ def _is_summertime():
 def create_figure():
     data = create_dateframe()
 
-    TEMP_COLOR = '#636EFA'
-    HUM_COLOR = '#EF553B'
-    PLOT_HEIGHT = 700
-
     fig = make_subplots(specs=[[{"secondary_y": True}]])
+        # rows=2, cols=1, 
+        # shared_xaxes=True, vertical_spacing=0.4,
+        # specs=[[{"secondary_y": True}], [{"secondary_y": True}]])
 
     fig.add_trace(
         go.Scatter(
             name = "Temperature",
             x=data["timestamp"], y=data["temperature"],
             hovertemplate = "<b>%{y:.1f}" + TEMPERATURE_UNIT + "</b>",
+            line = dict(color = TEMPERATURE_COLOR, width = PLOT_LINE_WIDTH)
             ), 
         secondary_y = False,
+        row=1, col=1
         )
 
     fig.add_trace(
@@ -109,8 +132,32 @@ def create_figure():
             name = "Humidity",
             x=data["timestamp"], y=data["humidity"],
             hovertemplate = "<b>%{y:.0f}" + HUMIDITY_UNIT + "</b>",
+            line = dict(color = HUMIDITY_COLOR, width = PLOT_LINE_WIDTH)
             ), 
         secondary_y = True,
+        row=1, col=1
+        )
+
+    fig.add_trace(
+        go.Scatter(
+            name = "Temperature (filtered)",
+            x=data["timestamp"], y=data["temperature_filtered"],
+            hovertemplate = "<b>%{y:.1f}" + TEMPERATURE_UNIT + "</b>",
+            line = dict(color = TEMPERATURE_FILTERED_COLOR, width = PLOT_FILTERED_LINE_WIDTH)
+            ), 
+        secondary_y = False,
+        row=1, col=1
+        )
+
+    fig.add_trace(
+        go.Scatter(
+            name = "Humidity (filtered)",
+            x=data["timestamp"], y=data["humidity_filtered"],
+            hovertemplate = "<b>%{y:.0f}" + HUMIDITY_UNIT + "</b>",
+            line = dict(color = HUMIDITY_FILTERED_COLOR, width = PLOT_FILTERED_LINE_WIDTH)
+            ), 
+        secondary_y = True,
+        row=1, col=1
         )
 
     fig.update_layout(
@@ -138,8 +185,8 @@ def create_figure():
     fig.update_yaxes(
         title_text=f"Temperature [{TEMPERATURE_UNIT}]", 
         secondary_y=False,
-        color = TEMP_COLOR,
-        gridcolor = TEMP_COLOR,
+        color = TEMPERATURE_FILTERED_COLOR,
+        gridcolor = TEMPERATURE_FILTERED_COLOR,
         linecolor = 'black',
         showgrid = False,
         showline = True,
@@ -149,8 +196,8 @@ def create_figure():
     fig.update_yaxes(
         title_text=f"Humidity [{HUMIDITY_UNIT}]", 
         secondary_y=True,
-        color = HUM_COLOR,
-        gridcolor = HUM_COLOR,
+        color = HUMIDITY_FILTERED_COLOR,
+        gridcolor = HUMIDITY_FILTERED_COLOR,
         linecolor = 'black',
         showgrid = False,
         showline = True,
