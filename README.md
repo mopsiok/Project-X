@@ -23,6 +23,10 @@ ESP8266 NodeMCU v3 and dedicated PCB supporting:
 
 ## Changelog
 
+### v3.2
+- data storage auto and manual repairing
+- added optional data filtering
+
 ### v3.1
 - added docker runner for data receive server
 - added interactive dash-based visualizer
